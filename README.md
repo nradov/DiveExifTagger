@@ -1,2 +1,2 @@
 # DiveExifTagger
-Java application for underwater photographers to automatically set image EXIF tags based on dive logs
+Java application for underwater photographers to automatically set image EXIF tags based on dive logs. I developed this to help with the Bay Area Underwater Explorers (BAUE) Geo-Tagging project. Currently it only works with Suunto .sde files.

@@ -8,6 +8,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 
+import javax.annotation.Nonnull;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -20,7 +21,17 @@ import org.xml.sax.SAXException;
 import com.github.nradov.diveexiftagger.divelog.Dive;
 
 /**
- * Single dive in Suunto XML format.
+ * <p>
+ * Single dive profile in Suunto XML format. The format is simple with some
+ * basic header information at the top followed by a series of data point
+ * elements each containing a time, depth, and temperature (actual temperature
+ * readings are only present in a subset of points).
+ * </p>
+ *
+ * <p>
+ * <strong>Note:</strong> This class is intended to process input from trusted
+ * sources only and could be vulnerable to XML exploits.
+ * </p>
  *
  * @author Nick Radov
  */
@@ -96,7 +107,7 @@ public class SuuntoXml implements Dive {
     }
 
     @Override
-    public float getDepthMeters(final Instant instant) {
+    public float getDepthMeters(@Nonnull final Instant instant) {
         if (!isDuringDive(instant)) {
             throw new IllegalArgumentException(
                     instant + " is not during this dive");
@@ -115,10 +126,7 @@ public class SuuntoXml implements Dive {
     }
 
     @Override
-    public boolean isDuringDive(final Instant instant) {
-        if (instant == null) {
-            throw new IllegalArgumentException("instant is null");
-        }
+    public boolean isDuringDive(@Nonnull final Instant instant) {
         return !(instant.isAfter(end) || instant.isBefore(start));
     }
 

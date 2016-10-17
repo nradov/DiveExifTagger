@@ -16,4 +16,9 @@ class NmComponent extends Component<Nm> implements Nm {
         return value;
     }
 
+    @Override
+    public float floatValue() {
+        return value.floatValue();
+    }
+
 }

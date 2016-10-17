@@ -5,7 +5,7 @@ package com.github.nradov.diveexiftagger.divelog.dan;
  *
  * @author Nick Radov
  */
-class Zpd extends Segment {
+final class Zpd extends Segment {
 
     private final CxField externalId;
     private final CxField internalId;
@@ -134,4 +134,5 @@ class Zpd extends Segment {
     public NmField getSmokingCigarettes() {
         return smokingCigarettes;
     }
+
 }

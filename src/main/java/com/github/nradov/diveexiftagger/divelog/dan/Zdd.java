@@ -6,6 +6,9 @@ package com.github.nradov.diveexiftagger.divelog.dan;
  * @author Nick Radov
  */
 final class Zdd extends Segment {
+
+    static final String ID = "ZDD";
+
     private final SiField exportSequence;
     private final SiField internalDiveSequence;
     private final ZceField purpose;

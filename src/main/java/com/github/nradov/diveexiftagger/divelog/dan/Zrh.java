@@ -1,11 +1,15 @@
 package com.github.nradov.diveexiftagger.divelog.dan;
 
+import javax.annotation.Nonnull;
+
 /**
  * Record header.
  *
  * @author Nick Radov
  */
 class Zrh extends Segment {
+
+    private static final String ID = "ZRH";
 
     private final StField fieldSeparator;
     private final StField encodingCharacters;
@@ -17,8 +21,11 @@ class Zrh extends Segment {
     private final ZceField tankPressureUnit;
     private final ZceField tankVolumeUnit;
 
-    Zrh(final Message parent, final String s) {
+    Zrh(@Nonnull final Message parent, @Nonnull final String s) {
         super(parent);
+        if (!s.startsWith(ID)) {
+            throw new IllegalArgumentException("wrong segment ID");
+        }
         if (s.length() < 10) {
             throw new IllegalArgumentException("too short");
         }

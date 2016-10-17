@@ -7,6 +7,8 @@ package com.github.nradov.diveexiftagger.divelog.dan;
  */
 final class Zdt extends Segment {
 
+    final static String ID = "ZDT";
+
     private final SiField exportSequence;
     private final SiField internalDiveSequence;
     private final NmField maximumDepth;
@@ -14,7 +16,7 @@ final class Zdt extends Segment {
     private final NmField minWaterTemperature;
     private final NmField pressureDropMainTank;
 
-    Zdt(final Message parent, final String value) {
+    Zdt(final SegmentGroup parent, final String value) {
         super(parent);
         final String[] fields = splitFields(value);
         exportSequence = fields.length >= 2 ? new SiField(this, fields[1])

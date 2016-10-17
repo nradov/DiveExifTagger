@@ -1,7 +1,8 @@
 package com.github.nradov.diveexiftagger.divelog.suunto;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Enumeration;
@@ -13,6 +14,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
+import javax.annotation.Nonnull;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.xml.sax.SAXException;
@@ -36,19 +38,19 @@ public class SuuntoSde implements DivesSource {
     private final ZoneOffset zoneOffset;
     private final ZipFile zipFile;
 
-    private final NavigableSet<Dive> dives = new TreeSet<Dive>();
+    private final NavigableSet<Dive> dives = new TreeSet<>();
 
-    public SuuntoSde(final String pathname, final ZoneOffset zoneOffset)
-            throws ZipException, IOException, ParserConfigurationException,
-            SAXException {
-        this(new File(pathname), zoneOffset);
+    public SuuntoSde(@Nonnull final String pathname,
+            @Nonnull final ZoneOffset zoneOffset) throws ZipException,
+            IOException, ParserConfigurationException, SAXException {
+        this(Paths.get(pathname), zoneOffset);
     }
 
-    public SuuntoSde(final File file, final ZoneOffset zoneOffset)
-            throws ZipException, IOException, ParserConfigurationException,
-            SAXException {
+    public SuuntoSde(@Nonnull final Path file,
+            @Nonnull final ZoneOffset zoneOffset) throws ZipException,
+            IOException, ParserConfigurationException, SAXException {
         this.zoneOffset = zoneOffset;
-        zipFile = new ZipFile(file);
+        zipFile = new ZipFile(file.toFile());
         final Enumeration<? extends ZipEntry> entries = zipFile.entries();
         while (entries.hasMoreElements()) {
             final ZipEntry entry = entries.nextElement();
@@ -68,12 +70,7 @@ public class SuuntoSde implements DivesSource {
         for (final Dive dive : dives) {
             LOGGER.log(Level.FINEST, "checking dive: start = " + dive.getStart()
                     + ", end = " + dive.getEnd());
-            if (instant.isBefore(dive.getStart())) {
-                // dives are listed in order of start time
-                break;
-            }
-            if (instant.compareTo(dive.getStart()) >= 0
-                    && instant.compareTo(dive.getEnd()) <= 0) {
+            if (dive.isDuringDive(instant)) {
                 return dive.getDepthMeters(instant);
             }
         }

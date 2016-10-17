@@ -15,7 +15,7 @@ class NmField extends Field<Nm> implements Nm {
         final BigDecimal value;
 
         Repetition(final String s) {
-            value = new BigDecimal(s);
+            value = s.isEmpty() ? null : new BigDecimal(s);
         }
 
         @Override
@@ -28,6 +28,11 @@ class NmField extends Field<Nm> implements Nm {
             return value;
         }
 
+        @Override
+        public float floatValue() {
+            return value.floatValue();
+        }
+
     }
 
     @Override
@@ -37,12 +42,17 @@ class NmField extends Field<Nm> implements Nm {
 
     @Override
     public BigDecimal toBigDecimal() {
-        return this.getRepetition(0).toBigDecimal();
+        return getRepetition(0).toBigDecimal();
     }
 
     @Override
     protected Repetition createRepetition(final String value) {
         return new Repetition(value);
+    }
+
+    @Override
+    public float floatValue() {
+        return getRepetition(0).floatValue();
     }
 
 }

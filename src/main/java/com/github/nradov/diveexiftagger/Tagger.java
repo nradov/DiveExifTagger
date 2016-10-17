@@ -5,6 +5,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -13,6 +17,7 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipException;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.cli.CommandLine;
@@ -54,7 +59,7 @@ import com.github.nradov.diveexiftagger.gpslog.GpsLogSource;
  */
 public class Tagger {
 
-    final File imageFile;
+    final Path imageFile;
 
     @CheckForNull
     final DivesSource source;
@@ -67,19 +72,19 @@ public class Tagger {
 
     final private static Options options = new Options();
 
-    public Tagger(final File imageFile, final File diveLogsFile)
-            throws ZipException, IOException, ParserConfigurationException,
-            SAXException {
+    public Tagger(@Nonnull final Path imageFile,
+            @Nonnull final Path diveLogsFile) throws ZipException, IOException,
+            ParserConfigurationException, SAXException {
         this.imageFile = imageFile;
         zoneOffset = null;
         source = DiveSourceFactory.create(diveLogsFile, zoneOffset);
         gpsSource = null;
     }
 
-    public Tagger(final String imagePathname, final String diveLogPathname)
-            throws ZipException, IOException, ParserConfigurationException,
-            SAXException {
-        this(new File(imagePathname), new File(diveLogPathname));
+    public Tagger(@Nonnull final String imagePathname,
+            @Nonnull final String diveLogPathname) throws ZipException,
+            IOException, ParserConfigurationException, SAXException {
+        this(Paths.get(imagePathname), Paths.get(diveLogPathname));
     }
 
     public static void main(final String[] args) throws ZipException,
@@ -99,16 +104,19 @@ public class Tagger {
 
     public void tagFiles()
             throws ImageWriteException, ImageReadException, IOException {
-        if (imageFile.isDirectory()) {
-            for (final File directoryEntry : imageFile.listFiles()) {
-                tagFile(directoryEntry);
+        if (Files.isDirectory(imageFile)) {
+            try (final DirectoryStream<Path> directoryStream = Files
+                    .newDirectoryStream(imageFile)) {
+                for (final Path directoryEntry : directoryStream) {
+                    tagFile(directoryEntry);
+                }
             }
         } else {
             tagFile(imageFile);
         }
     }
 
-    private void tagFile(final File file)
+    private void tagFile(final Path file)
             throws IOException, ImageWriteException, ImageReadException {
         final File dst = File.createTempFile(this.getClass().getSimpleName(),
                 ".jpg");
@@ -116,19 +124,17 @@ public class Tagger {
         try (final OutputStream os = new BufferedOutputStream(
                 new FileOutputStream(dst));) {
             // note that metadata might be null if no metadata is found.
-            final ImageMetadata metadata = Imaging.getMetadata(file);
+            final ImageMetadata metadata = Imaging.getMetadata(file.toFile());
             final JpegImageMetadata jpegMetadata = (JpegImageMetadata) metadata;
             if (jpegMetadata == null) {
                 throw new IllegalArgumentException(
-                        "file \"" + file.getCanonicalPath()
-                                + "\" does not contain metadata");
+                        "file \"" + file + "\" does not contain metadata");
             }
             // note that exif might be null if no Exif metadata is found.
             final TiffImageMetadata exif = jpegMetadata.getExif();
             if (exif == null) {
                 throw new IllegalArgumentException(
-                        "file \"" + file.getCanonicalPath()
-                                + "\" does not contain EXIF metadata");
+                        "file \"" + file + "\" does not contain EXIF metadata");
             }
 
             TiffOutputSet outputSet = exif.getOutputSet();
@@ -158,15 +164,10 @@ public class Tagger {
 
             System.err.println(dst.getAbsolutePath());
 
-            new ExifRewriter().updateExifMetadataLossless(file, os, outputSet);
-            if (!file.delete()) {
-                throw new IllegalStateException("failed to delete file \""
-                        + file.getCanonicalPath() + "\"");
-            }
-            if (!dst.renameTo(file)) {
-                throw new IllegalStateException("failed to rename file \""
-                        + file.getCanonicalPath() + "\"");
-            }
+            new ExifRewriter().updateExifMetadataLossless(file.toFile(), os,
+                    outputSet);
+            Files.delete(file);
+            Files.move(dst.toPath(), file);
         }
     }
 

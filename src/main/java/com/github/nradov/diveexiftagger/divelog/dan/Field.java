@@ -59,7 +59,7 @@ abstract class Field<T extends DataType> {
     }
 
     String getComponentSeparatorString() {
-        return getSegmentGroup().getComponentSeparatorString();
+        return getParent().getComponentSeparatorString();
     }
 
     @Override

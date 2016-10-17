@@ -2,10 +2,12 @@ package com.github.nradov.diveexiftagger.divelog.dan;
 
 /**
  * Dive header.
- * 
+ *
  * @author Nick Radov
  */
 final class Zdh extends Segment {
+
+    final static String ID = "ZDH";
 
     private final SiField exportSequence;
     private final SiField internalDiveSequence;

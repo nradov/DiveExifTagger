@@ -1,8 +1,9 @@
 package com.github.nradov.diveexiftagger;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.zip.ZipException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -14,13 +15,16 @@ import org.xml.sax.SAXException;
 
 public class TaggerTest {
 
-	@Test
-	public void testTagFiles() throws ZipException, IOException, ParserConfigurationException, SAXException,
-			ImageWriteException, ImageReadException, URISyntaxException {
-		final File imageFile = new File(getClass().getResource("/IMG_8687.JPG").toURI());
-		final File diveLogsFile = new File(getClass().getResource("/Divelogs.SDE").toURI());
-		final Tagger tagger = new Tagger(imageFile, diveLogsFile);
-		tagger.tagFiles();
-	}
+    @Test
+    public void testTagFiles() throws ZipException, IOException,
+            ParserConfigurationException, SAXException, ImageWriteException,
+            ImageReadException, URISyntaxException {
+        final Path imageFile = Paths
+                .get(getClass().getResource("/IMG_8687.JPG").toURI());
+        final Path diveLogsFile = Paths
+                .get(getClass().getResource("/Divelogs.SDE").toURI());
+        final Tagger tagger = new Tagger(imageFile, diveLogsFile);
+        tagger.tagFiles();
+    }
 
 }

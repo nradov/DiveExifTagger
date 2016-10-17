@@ -1,5 +1,6 @@
 package com.github.nradov.diveexiftagger.divelog.dan;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -90,6 +91,44 @@ abstract class SegmentGroup {
 
     static Instant convertTs(final Ts ts) {
         throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Get the first list element that starts with a particular prefix.
+     *
+     * @param list
+     *            list to search
+     * @param prefix
+     *            prefix to search for
+     * @return first list element starting with prefix, or {@code null} if there
+     *         is no match
+     */
+    static String firstElementStartingWith(@Nonnull final List<String> list,
+            @Nonnull final String prefix) {
+        for (final String s : list) {
+            if (s != null && s.startsWith(prefix)) {
+                return s;
+            }
+        }
+        return null;
+    }
+
+    private static final long SECONDS_PER_MINUTE = 60;
+
+    private static final BigDecimal MULTIPLICAND = BigDecimal
+            .valueOf(SECONDS_PER_MINUTE);
+
+    /**
+     * Convert a number of minutes in an NM field to seconds.
+     *
+     * @param time
+     *            minutes in decimal form
+     * @return seconds
+     */
+    static long convertDecimalMinutesToSeconds(final Nm time) {
+        final BigDecimal bd = time.toBigDecimal();
+        return (bd.longValue() * SECONDS_PER_MINUTE) + bd
+                .remainder(BigDecimal.ONE).multiply(MULTIPLICAND).longValue();
     }
 
 }

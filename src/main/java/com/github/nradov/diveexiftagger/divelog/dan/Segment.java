@@ -32,6 +32,11 @@ class Segment {
     }
 
     @Nonnull
+    String getComponentSeparatorString() {
+        return getParent().getComponentSeparatorString();
+    }
+
+    @Nonnull
     String getRepetitionSeparatorString() {
         return getParent().getRepetitionSeparatorString();
     }

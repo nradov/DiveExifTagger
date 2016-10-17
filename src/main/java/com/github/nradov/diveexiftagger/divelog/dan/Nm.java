@@ -28,4 +28,6 @@ interface Nm extends DataType {
 
     BigDecimal toBigDecimal();
 
+    float floatValue();
+
 }

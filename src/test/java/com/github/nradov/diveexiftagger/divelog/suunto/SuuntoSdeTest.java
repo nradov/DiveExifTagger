@@ -2,9 +2,9 @@ package com.github.nradov.diveexiftagger.divelog.suunto;
 
 import static org.junit.Assert.assertNotNull;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.util.zip.ZipException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -28,7 +28,7 @@ public class SuuntoSdeTest {
     public void testSuuntoSdeFileZoneOffset() throws ZipException, IOException,
             ParserConfigurationException, SAXException, URISyntaxException {
         assertNotNull(new SuuntoSde(
-                new File(getClass().getResource(SDE_RESOURCE_NAME).toURI()),
+                Paths.get(getClass().getResource(SDE_RESOURCE_NAME).toURI()),
                 null));
     }
 
@@ -36,7 +36,7 @@ public class SuuntoSdeTest {
     public void testGetDepthMetersNull() throws ZipException, IOException,
             ParserConfigurationException, SAXException, URISyntaxException {
         final DivesSource source = new SuuntoSde(
-                new File(getClass().getResource(SDE_RESOURCE_NAME).toURI()),
+                Paths.get(getClass().getResource(SDE_RESOURCE_NAME).toURI()),
                 null);
         source.getDepthMeters(null);
     }

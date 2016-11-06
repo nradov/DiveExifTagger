@@ -2,10 +2,9 @@ package com.github.nradov.diveexiftagger.gpslog;
 
 import javax.annotation.Nonnull;
 
-import org.apache.commons.imaging.common.RationalNumber;
-
 /**
- * A point in 2-D or 3-D space represented by GPS coordinates.
+ * A single set of 2-D (without altitude) or 3-D (with altitude) GPS
+ * coordinates.
  *
  * @author Nick Radov
  */
@@ -15,6 +14,14 @@ public final class GpsCoordinates {
     private final double longitude;
     private final double altitude;
 
+    /**
+     * Create a new {@code GpsCoordinates} without an altitude fix.
+     *
+     * @param latitude
+     *            latitude in degrees between -90 and +90 (inclusive)
+     * @param longitude
+     *            longitude in degrees between -180 and +180 (inclusive)
+     */
     public GpsCoordinates(final double latitude, final double longitude) {
         this(latitude, longitude, Double.NaN);
     }
@@ -58,8 +65,8 @@ public final class GpsCoordinates {
      * @return latitude in the range -90 to +90
      */
     @Nonnull
-    public RationalNumber getLatitude() {
-        return convertDouble(latitude);
+    public double getLatitude() {
+        return latitude;
     }
 
     /**
@@ -68,8 +75,8 @@ public final class GpsCoordinates {
      * @return longitude in the range -180 to +180
      */
     @Nonnull
-    public RationalNumber getLongitude() {
-        return convertDouble(longitude);
+    public double getLongitude() {
+        return longitude;
     }
 
     /**
@@ -90,19 +97,12 @@ public final class GpsCoordinates {
      *             if this set of coordinates doesn't include an altitude
      */
     @Nonnull
-    public RationalNumber getAltitude() {
+    public double getAltitude() {
         if (hasAltitude()) {
-            return convertDouble(altitude);
+            return altitude;
         } else {
             throw new IllegalStateException("no altitude");
         }
-    }
-
-    private static final int DENOMINATOR = 1000000;
-
-    @Nonnull
-    private static RationalNumber convertDouble(final double d) {
-        return new RationalNumber((int) (d * DENOMINATOR), DENOMINATOR);
     }
 
 }

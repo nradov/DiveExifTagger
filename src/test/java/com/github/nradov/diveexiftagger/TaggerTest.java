@@ -8,8 +8,6 @@ import java.util.zip.ZipException;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.commons.imaging.ImageReadException;
-import org.apache.commons.imaging.ImageWriteException;
 import org.junit.Test;
 import org.xml.sax.SAXException;
 
@@ -17,8 +15,7 @@ public class TaggerTest {
 
     @Test
     public void testTagFiles() throws ZipException, IOException,
-            ParserConfigurationException, SAXException, ImageWriteException,
-            ImageReadException, URISyntaxException {
+            ParserConfigurationException, SAXException, URISyntaxException {
         final Path imageFile = Paths
                 .get(getClass().getResource("/IMG_8687.JPG").toURI());
         final Path diveLogsFile = Paths

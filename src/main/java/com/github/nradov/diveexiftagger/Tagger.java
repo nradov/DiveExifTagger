@@ -1,10 +1,6 @@
 package com.github.nradov.diveexiftagger;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,18 +22,6 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.imaging.ImageReadException;
-import org.apache.commons.imaging.ImageWriteException;
-import org.apache.commons.imaging.Imaging;
-import org.apache.commons.imaging.common.ImageMetadata;
-import org.apache.commons.imaging.common.RationalNumber;
-import org.apache.commons.imaging.formats.jpeg.JpegImageMetadata;
-import org.apache.commons.imaging.formats.jpeg.exif.ExifRewriter;
-import org.apache.commons.imaging.formats.tiff.TiffImageMetadata;
-import org.apache.commons.imaging.formats.tiff.constants.ExifTagConstants;
-import org.apache.commons.imaging.formats.tiff.constants.GpsTagConstants;
-import org.apache.commons.imaging.formats.tiff.write.TiffOutputDirectory;
-import org.apache.commons.imaging.formats.tiff.write.TiffOutputSet;
 import org.xml.sax.SAXException;
 
 import com.github.nradov.diveexiftagger.divelog.DiveSourceFactory;
@@ -55,6 +39,9 @@ import com.github.nradov.diveexiftagger.gpslog.GpsLogSource;
  * before running.
  * </p>
  *
+ * @see <a href=
+ *      "https://github.com/moovida/jgrasstools/blob/master/jgrassgears/src/main/java/org/jgrasstools/gears/io/exif/ExifGpsWriter.java">
+ *      jgrasstools</a>
  * @author Nick Radov
  */
 public class Tagger {
@@ -87,9 +74,9 @@ public class Tagger {
         this(Paths.get(imagePathname), Paths.get(diveLogPathname));
     }
 
-    public static void main(final String[] args) throws ZipException,
-            IOException, ImageWriteException, ImageReadException,
-            ParserConfigurationException, SAXException, ParseException {
+    public static void main(final String[] args)
+            throws ZipException, IOException, ParserConfigurationException,
+            SAXException, ParseException {
         final CommandLineParser parser = new DefaultParser();
         final CommandLine line = parser.parse(options, args);
 
@@ -102,8 +89,7 @@ public class Tagger {
         formatter.printHelp("ant", options);
     }
 
-    public void tagFiles()
-            throws ImageWriteException, ImageReadException, IOException {
+    public void tagFiles() throws IOException {
         if (Files.isDirectory(imageFile)) {
             try (final DirectoryStream<Path> directoryStream = Files
                     .newDirectoryStream(imageFile)) {
@@ -116,65 +102,15 @@ public class Tagger {
         }
     }
 
-    private void tagFile(final Path file)
-            throws IOException, ImageWriteException, ImageReadException {
-        final File dst = File.createTempFile(this.getClass().getSimpleName(),
-                ".jpg");
-
-        try (final OutputStream os = new BufferedOutputStream(
-                new FileOutputStream(dst));) {
-            // note that metadata might be null if no metadata is found.
-            final ImageMetadata metadata = Imaging.getMetadata(file.toFile());
-            final JpegImageMetadata jpegMetadata = (JpegImageMetadata) metadata;
-            if (jpegMetadata == null) {
-                throw new IllegalArgumentException(
-                        "file \"" + file + "\" does not contain metadata");
-            }
-            // note that exif might be null if no Exif metadata is found.
-            final TiffImageMetadata exif = jpegMetadata.getExif();
-            if (exif == null) {
-                throw new IllegalArgumentException(
-                        "file \"" + file + "\" does not contain EXIF metadata");
-            }
-
-            TiffOutputSet outputSet = exif.getOutputSet();
-
-            /*
-             * if file does not contain any exif metadata, we create an empty
-             * set of exif metadata. Otherwise, we keep all of the other
-             * existing tags
-             */
-            if (null == outputSet) {
-                outputSet = new TiffOutputSet();
-            }
-
-            final String dateTimeOriginal = exif.getFieldValue(
-                    ExifTagConstants.EXIF_TAG_DATE_TIME_ORIGINAL)[0];
-
-            final TiffOutputDirectory exifDirectory = outputSet
-                    .getOrCreateExifDirectory();
-            exifDirectory.removeField(GpsTagConstants.GPS_TAG_GPS_ALTITUDE_REF);
-            exifDirectory.add(GpsTagConstants.GPS_TAG_GPS_ALTITUDE_REF,
-                    (byte) GpsTagConstants.GPS_TAG_GPS_ALTITUDE_REF_VALUE_BELOW_SEA_LEVEL);
-            exifDirectory.removeField(GpsTagConstants.GPS_TAG_GPS_ALTITUDE);
-            // TODO: add correction for altitude diving
-            exifDirectory.add(GpsTagConstants.GPS_TAG_GPS_ALTITUDE,
-                    convertFloat(source.getDepthMeters(
-                            convertExifDateTime(dateTimeOriginal))));
-
-            System.err.println(dst.getAbsolutePath());
-
-            new ExifRewriter().updateExifMetadataLossless(file.toFile(), os,
-                    outputSet);
-            Files.delete(file);
-            Files.move(dst.toPath(), file);
-        }
-    }
-
-    private static int DENOMINATOR = 100;
-
-    private static RationalNumber convertFloat(final float f) {
-        return new RationalNumber((int) (f * DENOMINATOR), DENOMINATOR);
+    // http://johnbokma.com/java/obtaining-image-metadata.html
+    private void tagFile(final Path path) throws IOException {
+        final ExifGpsWriter egw = new ExifGpsWriter();
+        egw.file = path.toString();
+        egw.pLat = Double.valueOf(0d);
+        egw.pLon = Double.valueOf(0d);
+        egw.pAltitude = Double.valueOf(0d);
+        egw.tTimestamp = "251016 17:16:00";
+        egw.writeGpsExif();
     }
 
     private static final Pattern EXIF_DATE_TIME_PATTERN = Pattern.compile(
@@ -189,7 +125,7 @@ public class Tagger {
      *      "http://www.awaresystems.be/imaging/tiff/tifftags/privateifd/exif/datetimeoriginal.html">
      *      TIFF Tag DateTimeOriginal</a>
      */
-    private Instant convertExifDateTime(final String dateTime) {
+    public static Instant convertExifDateTime(final String dateTime) {
         if (dateTime == null) {
             throw new IllegalArgumentException("dateTime is null");
         }

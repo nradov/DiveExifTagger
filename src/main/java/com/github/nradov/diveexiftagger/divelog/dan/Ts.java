@@ -1,6 +1,6 @@
 package com.github.nradov.diveexiftagger.divelog.dan;
 
-import java.time.Instant;
+import java.time.ZonedDateTime;
 
 /**
  * Time stamp.
@@ -40,6 +40,6 @@ import java.time.Instant;
  */
 interface Ts extends DataType {
 
-    Instant toInstant();
+    ZonedDateTime toZonedDateTime();
 
 }

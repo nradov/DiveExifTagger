@@ -53,7 +53,7 @@ class ZceField extends Field<Zce> implements Zce {
 
     @Override
     Repetition getRepetition(final int index) {
-        return getRepetition(index);
+        return (Repetition) super.getRepetition(index);
     }
 
     @Override

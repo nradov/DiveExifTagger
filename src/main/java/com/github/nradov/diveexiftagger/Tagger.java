@@ -104,13 +104,7 @@ public class Tagger {
 
     // http://johnbokma.com/java/obtaining-image-metadata.html
     private void tagFile(final Path path) throws IOException {
-        final ExifGpsWriter egw = new ExifGpsWriter();
-        egw.file = path.toString();
-        egw.pLat = Double.valueOf(0d);
-        egw.pLon = Double.valueOf(0d);
-        egw.pAltitude = Double.valueOf(0d);
-        egw.tTimestamp = "251016 17:16:00";
-        egw.writeGpsExif();
+
     }
 
     private static final Pattern EXIF_DATE_TIME_PATTERN = Pattern.compile(

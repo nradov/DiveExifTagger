@@ -18,18 +18,17 @@
 			<artifactId>annotations</artifactId>
 			<version>3.0.1u2</version>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.jgrasstools/jgt-jgrassgears -->
-		<dependency>
-			<groupId>org.jgrasstools</groupId>
-			<artifactId>jgt-jgrassgears</artifactId>
-			<version>0.7.8</version>
-		</dependency>
 		<!-- https://mvnrepository.com/artifact/junit/junit -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.12</version>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.adobe.xmp</groupId>
+			<artifactId>xmpcore</artifactId>
+			<version>6.1.10</version>
 		</dependency>
 	</dependencies>
 	<reporting>

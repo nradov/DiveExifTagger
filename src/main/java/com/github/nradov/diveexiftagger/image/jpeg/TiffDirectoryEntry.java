@@ -195,6 +195,10 @@ class TiffDirectoryEntry implements ReadableByteChannel {
 
     @Override
     public int read(final ByteBuffer dst) throws IOException {
+        dst.putShort(tag);
+        dst.putShort(type);
+        dst.putInt(count);
+        dst.putInt(valueOrOffset);
         return BYTES;
     }
 

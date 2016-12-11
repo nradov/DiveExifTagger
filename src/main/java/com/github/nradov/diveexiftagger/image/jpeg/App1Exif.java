@@ -14,25 +14,29 @@ class App1Exif extends App1Contents {
 
     static final byte[] EXIF = { 'E', 'x', 'i', 'f', 0, 0 };
 
-    private static final String BYTE_ORDER_LITTLE_ENDIAN = "II";
+    private static final class ByteOrderConstants {
 
-    private static final String BYTE_ORDER_BIG_ENDIAN = "MM";
+        private static final String LITTLE_ENDIAN = "II";
+        private static final String BIG_ENDIAN = "MM";
+
+    }
 
     private static final short VERSION_NUMBER = 42;
 
     private ByteOrder byteOrder;
 
-    private final List<TiffImageFileDirectory> ifds = new ArrayList<>(2);
+    private final List<ImageFileDirectory> ifds = new ArrayList<>(2);
 
     App1Exif(final byte[] content) throws IOException {
         // http://www.fileformat.info/format/tiff/corion.htm
         int index = 0;
         final String byteOrder = new String(content, index,
-                BYTE_ORDER_LITTLE_ENDIAN.length(), StandardCharsets.US_ASCII);
-        index += BYTE_ORDER_LITTLE_ENDIAN.length();
-        if (BYTE_ORDER_LITTLE_ENDIAN.equals(byteOrder)) {
+                ByteOrderConstants.LITTLE_ENDIAN.length(),
+                StandardCharsets.US_ASCII);
+        index += ByteOrderConstants.LITTLE_ENDIAN.length();
+        if (ByteOrderConstants.LITTLE_ENDIAN.equals(byteOrder)) {
             this.byteOrder = ByteOrder.LITTLE_ENDIAN;
-        } else if (BYTE_ORDER_BIG_ENDIAN.equals(byteOrder)) {
+        } else if (ByteOrderConstants.BIG_ENDIAN.equals(byteOrder)) {
             this.byteOrder = ByteOrder.BIG_ENDIAN;
         } else {
             throw new IllegalArgumentException(
@@ -47,8 +51,7 @@ class App1Exif extends App1Contents {
         }
         final int offsetOfIfd = convertToInt(content, index, this.byteOrder);
         index += Integer.BYTES;
-        ifds.add(new TiffImageFileDirectory(content, offsetOfIfd,
-                this.byteOrder));
+        ifds.add(new ImageFileDirectory(content, offsetOfIfd, this.byteOrder));
     }
 
     ByteOrder getByteOrder() {
@@ -60,8 +63,18 @@ class App1Exif extends App1Contents {
         int bytes = 0;
         dst.put(EXIF);
         bytes += EXIF.length;
-        // TODO: put the endian
-        for (final TiffImageFileDirectory dir : ifds) {
+        final String byteOrderString;
+        if (ByteOrder.LITTLE_ENDIAN.equals(byteOrder)) {
+            byteOrderString = ByteOrderConstants.LITTLE_ENDIAN;
+        } else if (ByteOrder.BIG_ENDIAN.equals(byteOrder)) {
+            byteOrderString = ByteOrderConstants.BIG_ENDIAN;
+        } else {
+            throw new IllegalStateException(
+                    "unexpected byte order: " + byteOrder);
+        }
+        dst.put(byteOrderString.getBytes(StandardCharsets.US_ASCII));
+        bytes += byteOrderString.length();
+        for (final ImageFileDirectory dir : ifds) {
             bytes += dir.read(dst);
         }
         return bytes;

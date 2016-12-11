@@ -23,6 +23,9 @@ public class JpegExif implements Serializable {
 
     private final List<Segment> segments = new ArrayList<>(7);
 
+    /** End of image. */
+    private static final short EOI = (short) 0xFFD9;
+
     // TODO:
     // http://minborgsjavapot.blogspot.com/2014/12/java-8-initializing-maps-in-smartest-way.html
     private static final Map<Short, Supplier<? extends Segment>> SEGMENT_MARKER_CTOR_MAP = Collections
@@ -44,37 +47,44 @@ public class JpegExif implements Serializable {
 
     public JpegExif(final Path path) throws IOException, XMPException {
         // https://examples.javacodegeeks.com/core-java/nio/filechannel/java-nio-channels-filechannel-example/
-        try (final SeekableByteChannel channel = FileChannel.open(path)) {
-            final ByteBuffer dst = ByteBuffer.allocate(2);
-            while (channel.position() < channel.size()) {
-                if (channel.read(dst) != 2) {
-                    throw new IllegalStateException();
-                }
-                dst.flip();
-                final short marker = dst.getShort();
-                if (SEGMENT_MARKER_CTOR_MAP.containsKey(marker)) {
-                    final Segment segment = SEGMENT_MARKER_CTOR_MAP.get(marker)
-                            .get();
-                    segment.populate(channel);
-                    segments.add(segment);
-                } else {
-                    throw new IllegalArgumentException("unexpected marker: "
-                            + formatShortAsUnsignedHex(marker));
-                }
-                dst.flip();
+        this(FileChannel.open(path));
+    }
+
+    public JpegExif(final SeekableByteChannel channel)
+            throws IOException, XMPException {
+        final ByteBuffer dst = ByteBuffer.allocate(2);
+        while (channel.position() < channel.size()) {
+            if (channel.read(dst) != 2) {
+                throw new IllegalStateException();
             }
+            dst.flip();
+            final short marker = dst.getShort();
+            if (SEGMENT_MARKER_CTOR_MAP.containsKey(marker)) {
+                final Segment segment = SEGMENT_MARKER_CTOR_MAP.get(marker)
+                        .get();
+                segment.populate(channel);
+                segments.add(segment);
+            } else {
+                throw new IllegalArgumentException("unexpected marker: "
+                        + formatShortAsUnsignedHex(marker));
+            }
+            dst.flip();
         }
     }
 
     void write(final Path path) throws IOException {
-        try (final FileChannel channel = FileChannel.open(path,
-                StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
-            long position = 0;
-            for (final Segment segment : segments) {
-                channel.transferFrom(segment, position, segment.getLength());
-                position += segment.getLength();
-            }
+        write(FileChannel.open(path, StandardOpenOption.CREATE,
+                StandardOpenOption.APPEND));
+    }
+
+    void write(final FileChannel channel) throws IOException {
+        long position = 0;
+        for (final Segment segment : segments) {
+            final int length = segment.getLength();
+            channel.transferFrom(segment, position, length);
+            position += length;
         }
+        channel.write(TiffUtilities.convertToByteBuffer(EOI));
     }
 
 }

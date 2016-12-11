@@ -11,10 +11,16 @@ abstract class Segment implements ReadableByteChannel {
 
     /**
      * Get the length of this segment in bytes, including the 2-byte marker.
+     *
+     * @return segment length in bytes
      */
     abstract int getLength();
 
-    /** Get the two-byte marker used to start this segment. */
+    /**
+     * Get the two-byte marker used to start this segment.
+     * 
+     * @return marker which starts this segment
+     */
     abstract short getMarker();
 
     void populate(final SeekableByteChannel channel)

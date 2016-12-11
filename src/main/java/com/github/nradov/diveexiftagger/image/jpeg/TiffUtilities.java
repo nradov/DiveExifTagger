@@ -25,10 +25,20 @@ final class TiffUtilities {
                 .getInt();
     }
 
-    static byte[] convertToBytes(final int i, final ByteOrder byteOrder) {
+    static ByteBuffer convertToByteBuffer(final short value) {
+        final ByteBuffer bb = ByteBuffer.allocate(Short.BYTES);
+        bb.putShort(value);
+        return bb;
+    }
+
+    static byte[] convertToBytes(final short value) {
+        return convertToByteBuffer(value).array();
+    }
+
+    static byte[] convertToBytes(final int value, final ByteOrder byteOrder) {
         final ByteBuffer bb = ByteBuffer.allocate(Integer.BYTES);
         bb.order(byteOrder);
-        bb.putInt(i);
+        bb.putInt(value);
         return bb.array();
     }
 

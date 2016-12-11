@@ -21,6 +21,9 @@ import com.adobe.internal.xmp.XMPMetaFactory;
  *      "http://www.iso.org/iso/iso_catalogue/catalogue_tc/catalogue_detail.htm?csnumber=57421">
  *      Graphic technology -- Extensible metadata platform (XMP) specification
  *      -- Part 1: Data model, serialization and core properties</a>
+ * @see <a target="_" title="CIPA" href=
+ *      "http://www.cipa.jp/std/documents/e/DC-010-2012_E.pdf">Exif 2.3 metadata
+ *      for XMP</a>
  * @author Nick Radov
  */
 class App1Xmp extends App1Contents {

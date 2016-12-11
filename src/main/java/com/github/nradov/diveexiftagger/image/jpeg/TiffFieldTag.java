@@ -16,17 +16,12 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ * All supported metadata field tags.
  *
  * @author Nick Radov
- * @see <a target="_" href="http://www.exif.org/Exif2-2.PDF">Exchangeable image
- *      file format for digital still cameras: Exif Version 2.2</a>
  * @see <a target="_" href=
  *      "http://www.sno.phy.queensu.ca/~phil/exiftool/TagNames/EXIF.html" title=
  *      "ExifTool by Phil Harvey">EXIF Tags</a>
- * @see <a target="_" href=
- *      "http://www.cipa.jp/std/documents/e/DC-008-Translation-2016-E.pdf">CIPA
- *      DC- 008-Translation- 2016 Exchangeable image file format for digital
- *      still cameras: Exif Version 2.31</a>
  */
 public enum TiffFieldTag {
 
@@ -987,8 +982,9 @@ public enum TiffFieldTag {
         return tag;
     }
 
+    /** Map from tag numbers to objects. */
     @SuppressWarnings("serial")
-    private static final Map<Short, TiffFieldTag> MAP = Collections
+    private static final Map<Short, TiffFieldTag> SHORT_TAG_MAP = Collections
             .unmodifiableMap(new HashMap<Short, TiffFieldTag>() {
                 {
                     for (final TiffFieldTag value : TiffFieldTag.values()) {
@@ -998,8 +994,8 @@ public enum TiffFieldTag {
             });
 
     static TiffFieldTag valueOf(final short tag) {
-        if (MAP.containsKey(tag)) {
-            return MAP.get(tag);
+        if (SHORT_TAG_MAP.containsKey(tag)) {
+            return SHORT_TAG_MAP.get(tag);
         } else {
             throw new IllegalArgumentException(
                     "unsupported tag: " + formatShortAsUnsignedHex(tag));

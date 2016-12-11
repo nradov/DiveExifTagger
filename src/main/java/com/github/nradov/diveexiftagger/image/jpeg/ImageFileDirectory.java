@@ -14,19 +14,16 @@ import java.util.List;
 /**
  * TIFF image file directory (IFD).
  *
- * @see <a target="_" title="Adobe Developers Association" href=
- *      "https://partners.adobe.com/public/developer/en/tiff/TIFF6.pdf">TIFF
- *      Revision 6.0</a>
  * @author Nick Radov
  */
-class TiffImageFileDirectory implements ReadableByteChannel {
+class ImageFileDirectory implements ReadableByteChannel {
 
     private final List<TiffDirectoryEntry> directoryEntries;
-    private TiffImageFileDirectory exif;
-    private TiffImageFileDirectory gps;
+    private ImageFileDirectory exif;
+    private ImageFileDirectory gps;
     private final int nextIfdOffset;
 
-    TiffImageFileDirectory(final byte[] b, final int offset,
+    ImageFileDirectory(final byte[] b, final int offset,
             final ByteOrder byteOrder) {
         int index = offset;
         final short numberOfDirectoryEntries = convertToShort(b, index,
@@ -41,10 +38,10 @@ class TiffImageFileDirectory implements ReadableByteChannel {
         nextIfdOffset = convertToInt(b, index, byteOrder);
         for (final TiffDirectoryEntry entry : directoryEntries) {
             if (entry.getTag().equals(TiffFieldTag.ExifIfdPointer)) {
-                exif = new TiffImageFileDirectory(b, entry.getValueLong(),
+                exif = new ImageFileDirectory(b, entry.getValueLong(),
                         byteOrder);
             } else if (entry.getTag().equals(TiffFieldTag.GpsInfoIfdPointer)) {
-                gps = new TiffImageFileDirectory(b, entry.getValueLong(),
+                gps = new ImageFileDirectory(b, entry.getValueLong(),
                         byteOrder);
             }
         }
@@ -85,9 +82,16 @@ class TiffImageFileDirectory implements ReadableByteChannel {
     @Override
     public int read(final ByteBuffer dst) throws IOException {
         int bytes = 0;
+        if (directoryEntries.size() > Short.MAX_VALUE) {
+            throw new IllegalStateException("too many directory entries");
+        }
+        dst.putShort((short) directoryEntries.size());
+        bytes += Short.BYTES;
         for (final TiffDirectoryEntry entry : directoryEntries) {
             bytes += entry.read(dst);
         }
+        dst.putInt(nextIfdOffset);
+        bytes += Integer.BYTES;
         return bytes;
     }
 

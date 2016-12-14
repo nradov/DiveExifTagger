@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Optional;
 
 import com.adobe.internal.xmp.XMPException;
 
@@ -31,9 +32,9 @@ class ApplicationSpecific1 extends VariableLengthSegment {
     @Override
     void populate(final SeekableByteChannel channel)
             throws IOException, XMPException {
-        final ByteBuffer dst = ByteBuffer.allocate(Short.BYTES);
+        final ByteBuffer dst = ByteBuffer.allocate(java.lang.Short.BYTES);
         populateLength(channel, dst);
-        if (getLength() > Short.BYTES) {
+        if (getLength() > java.lang.Short.BYTES) {
             final ByteBuffer body = ByteBuffer
                     .allocate(getLength() - dst.capacity());
             if (channel.read(body) != body.capacity()) {
@@ -71,6 +72,10 @@ class ApplicationSpecific1 extends VariableLengthSegment {
     @Override
     public int read(final ByteBuffer dst) throws IOException {
         return contents.read(dst);
+    }
+
+    public Optional<Rational> getFieldRational(final TiffFieldTag tag) {
+        return contents.getFieldRational(tag);
     }
 
 }

@@ -36,6 +36,8 @@ class StartOfScan extends VariableLengthSegment {
     @Override
     public int read(final ByteBuffer dst) throws IOException {
         int bytes = super.read(dst);
+        // TODO: calculate the correct limit
+        dst.limit(dst.capacity());
         dst.put(compressed);
         bytes += compressed.capacity();
         return bytes;

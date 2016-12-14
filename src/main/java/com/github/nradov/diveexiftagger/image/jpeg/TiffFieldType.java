@@ -17,16 +17,16 @@ import java.util.Map;
 enum TiffFieldType {
 
     /** 8-bit unsigned integer. */
-    BYTE(1, Byte.BYTES),
+    BYTE(1, java.lang.Byte.BYTES),
 
     /**
      * 8-bit byte that contains a 7-bit ASCII code; the last byte must be NUL
      * (binary zero).
      */
-    ASCII(2, Byte.BYTES),
+    ASCII(2, java.lang.Byte.BYTES),
 
     /** 16-bit (2-byte) unsigned integer. */
-    SHORT(3, Short.BYTES),
+    SHORT(3, java.lang.Short.BYTES),
 
     /** 32-bit (4-byte) unsigned integer. */
     LONG(4, Integer.BYTES),
@@ -38,16 +38,16 @@ enum TiffFieldType {
     RATIONAL(5, Integer.BYTES * 2),
 
     /** An 8-bit signed (twos-complement) integer. */
-    SBYTE(6, Byte.BYTES),
+    SBYTE(6, java.lang.Byte.BYTES),
 
     /**
      * An 8-bit byte that may contain anything, depending on the definition of
      * the field.
      */
-    UNDEFINED(7, Byte.BYTES),
+    UNDEFINED(7, java.lang.Byte.BYTES),
 
     /** A 16-bit (2-byte) signed (twos-complement) integer. */
-    SSHORT(8, Short.BYTES),
+    SSHORT(8, java.lang.Short.BYTES),
 
     /** A 32-bit (4-byte) signed (twos-complement) integer. */
     SLONG(9, Integer.BYTES),
@@ -59,10 +59,10 @@ enum TiffFieldType {
     SRATIONAL(10, Integer.BYTES * 2),
 
     /** Single precision (4-byte) IEEE format. */
-    FLOAT(11, Float.BYTES),
+    FLOAT(11, java.lang.Float.BYTES),
 
     /** Double precision (8-byte) IEEE format. */
-    DOUBLE(12, Double.BYTES);
+    DOUBLE(12, java.lang.Double.BYTES);
 
     private final short type;
     private int length;
@@ -81,8 +81,8 @@ enum TiffFieldType {
     }
 
     @SuppressWarnings("serial")
-    private static final Map<Short, TiffFieldType> MAP = Collections
-            .unmodifiableMap(new HashMap<Short, TiffFieldType>() {
+    private static final Map<java.lang.Short, TiffFieldType> MAP = Collections
+            .unmodifiableMap(new HashMap<java.lang.Short, TiffFieldType>() {
                 {
                     for (final TiffFieldType value : TiffFieldType.values()) {
                         put(value.getType(), value);

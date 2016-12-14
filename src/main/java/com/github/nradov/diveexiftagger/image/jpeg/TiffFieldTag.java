@@ -984,8 +984,8 @@ public enum TiffFieldTag {
 
     /** Map from tag numbers to objects. */
     @SuppressWarnings("serial")
-    private static final Map<Short, TiffFieldTag> SHORT_TAG_MAP = Collections
-            .unmodifiableMap(new HashMap<Short, TiffFieldTag>() {
+    private static final Map<java.lang.Short, TiffFieldTag> SHORT_TAG_MAP = Collections
+            .unmodifiableMap(new HashMap<java.lang.Short, TiffFieldTag>() {
                 {
                     for (final TiffFieldTag value : TiffFieldTag.values()) {
                         put(value.getTag(), value);

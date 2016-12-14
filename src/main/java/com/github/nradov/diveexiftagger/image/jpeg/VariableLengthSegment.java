@@ -15,9 +15,9 @@ abstract class VariableLengthSegment extends Segment {
     @Override
     void populate(final SeekableByteChannel channel)
             throws IOException, XMPException {
-        final ByteBuffer dst = ByteBuffer.allocate(Short.BYTES);
+        final ByteBuffer dst = ByteBuffer.allocate(java.lang.Short.BYTES);
         populateLength(channel, dst);
-        if (length > Short.BYTES) {
+        if (length > java.lang.Short.BYTES) {
             body = ByteBuffer.allocate(length - dst.capacity());
             if (channel.read(body) != body.capacity()) {
                 throw new IOException("unexpected end of channel");
@@ -39,14 +39,12 @@ abstract class VariableLengthSegment extends Segment {
     public int read(final ByteBuffer dst) throws IOException {
         int bytes = super.read(dst);
         dst.putShort(length);
-        bytes += Short.BYTES;
+        bytes += java.lang.Short.BYTES;
         if (body == null) {
             throw new IllegalStateException();
         }
-        if (body.remaining() > dst.remaining()) {
-            throw new IllegalStateException(
-                    "remaining " + body.remaining() + " > " + dst.remaining());
-        }
+        // TODO: calculate the correct limit
+        dst.limit(body.remaining() * 2);
         dst.put(body);
         bytes += body.capacity();
         return bytes;

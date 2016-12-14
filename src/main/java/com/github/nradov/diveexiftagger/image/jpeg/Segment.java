@@ -18,7 +18,7 @@ abstract class Segment implements ReadableByteChannel {
 
     /**
      * Get the two-byte marker used to start this segment.
-     * 
+     *
      * @return marker which starts this segment
      */
     abstract short getMarker();
@@ -41,7 +41,7 @@ abstract class Segment implements ReadableByteChannel {
     @Override
     public int read(final ByteBuffer dst) throws IOException {
         dst.putShort(getMarker());
-        return Short.BYTES;
+        return java.lang.Short.BYTES;
     }
 
 }

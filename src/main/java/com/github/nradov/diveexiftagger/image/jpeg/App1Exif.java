@@ -9,6 +9,7 @@ import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 class App1Exif extends App1Contents {
 
@@ -44,7 +45,7 @@ class App1Exif extends App1Contents {
         }
         final short versionNumber = convertToShort(content, index,
                 this.byteOrder);
-        index += Short.BYTES;
+        index += java.lang.Short.BYTES;
         if (versionNumber != VERSION_NUMBER) {
             throw new IllegalArgumentException(
                     "unexpected version number: " + versionNumber);
@@ -60,6 +61,8 @@ class App1Exif extends App1Contents {
 
     @Override
     public int read(final ByteBuffer dst) throws IOException {
+        // TODO: calculate the actual limit
+        dst.limit(1000000);
         int bytes = 0;
         dst.put(EXIF);
         bytes += EXIF.length;
@@ -78,6 +81,17 @@ class App1Exif extends App1Contents {
             bytes += dir.read(dst);
         }
         return bytes;
+    }
+
+    @Override
+    public Optional<Rational> getFieldRational(final TiffFieldTag tag) {
+        for (final ImageFileDirectory ifd : ifds) {
+            final Optional<Rational> o = ifd.getFieldRational(tag);
+            if (o.isPresent()) {
+                return o;
+            }
+        }
+        return Optional.empty();
     }
 
 }

@@ -20,8 +20,8 @@ class TiffDirectoryEntry implements ReadableByteChannel {
     private final int count;
     private final int valueOrOffset;
 
-    static final int BYTES = Short.BYTES + Short.BYTES + Integer.BYTES
-            + Integer.BYTES;
+    static final int BYTES = java.lang.Short.BYTES + java.lang.Short.BYTES
+            + Integer.BYTES + Integer.BYTES;
 
     TiffDirectoryEntry(final byte[] tiff, final int index,
             final ByteOrder byteOrder) {
@@ -29,9 +29,9 @@ class TiffDirectoryEntry implements ReadableByteChannel {
         this.byteOrder = byteOrder;
         int newIndex = index;
         tag = convertToShort(tiff, newIndex, byteOrder);
-        newIndex += Short.BYTES;
+        newIndex += java.lang.Short.BYTES;
         type = convertToShort(tiff, newIndex, byteOrder);
-        newIndex += Short.BYTES;
+        newIndex += java.lang.Short.BYTES;
         count = convertToInt(tiff, newIndex, byteOrder);
         newIndex += Integer.BYTES;
         valueOrOffset = convertToInt(tiff, newIndex, byteOrder);
@@ -136,6 +136,11 @@ class TiffDirectoryEntry implements ReadableByteChannel {
         }
     }
 
+    Rational getValueRational() {
+        return new Rational(getValueRationalNumerator(),
+                getValueRationalDenominator());
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
@@ -149,7 +154,7 @@ class TiffDirectoryEntry implements ReadableByteChannel {
             sb.append(convertByteArrayToString(getValueByte()));
             break;
         case SHORT:
-            sb.append(Short.toUnsignedInt(getValueShort()));
+            sb.append(java.lang.Short.toUnsignedInt(getValueShort()));
             break;
         case LONG:
             sb.append(Integer.toUnsignedString(getValueLong()));
@@ -174,7 +179,7 @@ class TiffDirectoryEntry implements ReadableByteChannel {
         final StringBuilder sb = new StringBuilder();
         sb.append('[');
         for (int i = 0; i < b.length; i++) {
-            sb.append(Byte.toUnsignedInt(b[i]));
+            sb.append(java.lang.Byte.toUnsignedInt(b[i]));
             if (i < b.length - 1) {
                 sb.append(", ");
             }

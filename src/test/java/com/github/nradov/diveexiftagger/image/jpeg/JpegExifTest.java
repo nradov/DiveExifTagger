@@ -3,6 +3,8 @@ package com.github.nradov.diveexiftagger.image.jpeg;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,6 +23,8 @@ public class JpegExifTest {
                 .get(getClass().getResource("/IMG_8687.JPG").toURI());
         final JpegExif jpeg = new JpegExif(imageFile);
 
+        assertEquals(0, new BigDecimal("6.1").compareTo(jpeg.getGpsAltitude()
+                .get().toBigDecimal(RoundingMode.UNNECESSARY)));
         final Path temp = Files.createTempFile(null, null);
         jpeg.write(temp);
 

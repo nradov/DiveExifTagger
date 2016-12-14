@@ -15,8 +15,8 @@ final class TiffUtilities {
     // http://stackoverflow.com/questions/5616052/how-can-i-convert-a-4-byte-array-to-an-integer
     static short convertToShort(final byte[] array, final int offset,
             final ByteOrder byteOrder) {
-        return ByteBuffer.wrap(array, offset, Short.BYTES).order(byteOrder)
-                .getShort();
+        return ByteBuffer.wrap(array, offset, java.lang.Short.BYTES)
+                .order(byteOrder).getShort();
     }
 
     static int convertToInt(final byte[] array, final int offset,
@@ -26,7 +26,7 @@ final class TiffUtilities {
     }
 
     static ByteBuffer convertToByteBuffer(final short value) {
-        final ByteBuffer bb = ByteBuffer.allocate(Short.BYTES);
+        final ByteBuffer bb = ByteBuffer.allocate(java.lang.Short.BYTES);
         bb.putShort(value);
         return bb;
     }
@@ -43,8 +43,9 @@ final class TiffUtilities {
     }
 
     static String formatShortAsUnsignedHex(final short s) {
-        final String hex = "000" + Integer.toHexString(Short.toUnsignedInt(s))
-                .toUpperCase(Locale.US);
+        final String hex = "000"
+                + Integer.toHexString(java.lang.Short.toUnsignedInt(s))
+                        .toUpperCase(Locale.US);
         return "0x" + hex.substring(hex.length() - 4);
     }
 

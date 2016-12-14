@@ -10,6 +10,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * TIFF image file directory (IFD).
@@ -82,17 +83,38 @@ class ImageFileDirectory implements ReadableByteChannel {
     @Override
     public int read(final ByteBuffer dst) throws IOException {
         int bytes = 0;
-        if (directoryEntries.size() > Short.MAX_VALUE) {
+        if (directoryEntries.size() > java.lang.Short.MAX_VALUE) {
             throw new IllegalStateException("too many directory entries");
         }
         dst.putShort((short) directoryEntries.size());
-        bytes += Short.BYTES;
+        bytes += java.lang.Short.BYTES;
         for (final TiffDirectoryEntry entry : directoryEntries) {
             bytes += entry.read(dst);
         }
         dst.putInt(nextIfdOffset);
         bytes += Integer.BYTES;
         return bytes;
+    }
+
+    public Optional<Rational> getFieldRational(final TiffFieldTag tag) {
+        for (final TiffDirectoryEntry entry : directoryEntries) {
+            if (entry.getTag().equals(tag)) {
+                return Optional.of(entry.getValueRational());
+            }
+        }
+        if (exif != null) {
+            final Optional<Rational> exifValue = exif.getFieldRational(tag);
+            if (exifValue.isPresent()) {
+                return exifValue;
+            }
+        }
+        if (gps != null) {
+            final Optional<Rational> gpsValue = gps.getFieldRational(tag);
+            if (gpsValue.isPresent()) {
+                return gpsValue;
+            }
+        }
+        return Optional.empty();
     }
 
 }

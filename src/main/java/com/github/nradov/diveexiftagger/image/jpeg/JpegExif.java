@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import com.adobe.internal.xmp.XMPException;
@@ -28,18 +29,21 @@ public class JpegExif implements Serializable {
 
     // TODO:
     // http://minborgsjavapot.blogspot.com/2014/12/java-8-initializing-maps-in-smartest-way.html
-    private static final Map<Short, Supplier<? extends Segment>> SEGMENT_MARKER_CTOR_MAP = Collections
-            .unmodifiableMap(new HashMap<Short, Supplier<? extends Segment>>() {
-                {
-                    put(StartOfImage.MARKER, StartOfImage::new);
-                    put(ApplicationSpecific1.MARKER, ApplicationSpecific1::new);
-                    put(DefineQuantizationTable.MARKER,
-                            DefineQuantizationTable::new);
-                    put(StartOfFrame.MARKER, StartOfFrame::new);
-                    put(DefineHuffmanTable.MARKER, DefineHuffmanTable::new);
-                    put(StartOfScan.MARKER, StartOfScan::new);
-                }
-            });
+    private static final Map<java.lang.Short, Supplier<? extends Segment>> SEGMENT_MARKER_CTOR_MAP = Collections
+            .unmodifiableMap(
+                    new HashMap<java.lang.Short, Supplier<? extends Segment>>() {
+                        {
+                            put(StartOfImage.MARKER, StartOfImage::new);
+                            put(ApplicationSpecific1.MARKER,
+                                    ApplicationSpecific1::new);
+                            put(DefineQuantizationTable.MARKER,
+                                    DefineQuantizationTable::new);
+                            put(StartOfFrame.MARKER, StartOfFrame::new);
+                            put(DefineHuffmanTable.MARKER,
+                                    DefineHuffmanTable::new);
+                            put(StartOfScan.MARKER, StartOfScan::new);
+                        }
+                    });
 
     protected JpegExif() {
         // for serialization only
@@ -85,6 +89,23 @@ public class JpegExif implements Serializable {
             position += length;
         }
         channel.write(TiffUtilities.convertToByteBuffer(EOI));
+    }
+
+    public Optional<Rational> getFieldRational(final TiffFieldTag tag) {
+        for (final Segment segment : segments) {
+            if (segment instanceof ApplicationSpecific1) {
+                final Optional<Rational> o = ((ApplicationSpecific1) segment)
+                        .getFieldRational(tag);
+                if (o.isPresent()) {
+                    return o;
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    public Optional<Rational> getGpsAltitude() {
+        return getFieldRational(TiffFieldTag.GpsAltitude);
     }
 
 }

@@ -118,7 +118,14 @@ class ImageFileDirectory implements ReadableByteChannel {
     }
 
     int getLength() {
-        throw new UnsupportedOperationException("not implemented yet");
+        int length = 0;
+        for (final DirectoryEntry e : directoryEntries) {
+            length += e.getLength();
+        }
+        length += exif == null ? 0 : exif.getLength();
+        length += gps == null ? 0 : gps.getLength();
+        length += Integer.BYTES;
+        return length;
     }
 
 }

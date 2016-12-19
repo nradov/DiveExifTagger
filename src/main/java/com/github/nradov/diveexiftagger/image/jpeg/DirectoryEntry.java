@@ -207,4 +207,8 @@ class DirectoryEntry implements ReadableByteChannel {
         return BYTES;
     }
 
+    public int getLength() {
+        return BYTES;
+    }
+
 }

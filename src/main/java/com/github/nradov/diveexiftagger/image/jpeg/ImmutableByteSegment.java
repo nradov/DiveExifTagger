@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 
-import com.adobe.internal.xmp.XMPException;
-
 /**
  *
  * @author Nick Radov
@@ -19,8 +17,7 @@ abstract class ImmutableByteSegment extends VariableLengthSegment {
     }
 
     @Override
-    void populate(final SeekableByteChannel channel)
-            throws IOException, XMPException {
+    void populate(final SeekableByteChannel channel) throws IOException {
         final ByteBuffer dst = ByteBuffer.allocate(java.lang.Short.BYTES);
         channel.read(dst);
         dst.flip();
@@ -39,7 +36,7 @@ abstract class ImmutableByteSegment extends VariableLengthSegment {
 
     @Override
     int getLength() {
-        return java.lang.Short.BYTES + contents.length;
+        return java.lang.Short.BYTES + java.lang.Short.BYTES + contents.length;
     }
 
     @Override

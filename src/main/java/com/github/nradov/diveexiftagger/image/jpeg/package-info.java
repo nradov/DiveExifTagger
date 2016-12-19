@@ -31,4 +31,7 @@ package com.github.nradov.diveexiftagger.image.jpeg;
  * @see <a target="_" title="Wikibooks" href=
  *      "https://en.wikibooks.org/wiki/Category:JPEG_-_Idea_and_Practice">JPEG -
  *      Idea and Practice</a>
+ * @see <a target="_" href=
+ *      "http://vip.sugovica.hu/Sardi/kepnezo/JPEG%20File%20Layout%20and%20Format.htm">
+ *      JPEG File Layout and Format</a>
  */

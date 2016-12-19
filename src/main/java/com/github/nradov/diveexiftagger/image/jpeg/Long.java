@@ -46,4 +46,9 @@ public class Long extends DataType {
         return new BigDecimal(toBigInteger());
     }
 
+    @Override
+    public String toString() {
+        return Integer.toUnsignedString(value);
+    }
+
 }

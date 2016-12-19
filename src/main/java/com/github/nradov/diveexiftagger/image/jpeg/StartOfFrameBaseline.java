@@ -1,10 +1,15 @@
 package com.github.nradov.diveexiftagger.image.jpeg;
 
-class StartOfFrame extends VariableLengthSegment {
+/**
+ * Start Of Frame (Baseline DCT).
+ *
+ * @author Nick Radov
+ */
+class StartOfFrameBaseline extends ImmutableByteSegment {
 
     static final short MARKER = (short) 0xFFC0;
 
-    StartOfFrame() {
+    StartOfFrameBaseline() {
 
     }
 

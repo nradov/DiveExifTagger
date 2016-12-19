@@ -1,13 +1,13 @@
 package com.github.nradov.diveexiftagger.image.jpeg;
 
-import static com.github.nradov.diveexiftagger.image.jpeg.TiffUtilities.formatShortAsUnsignedHex;
+import static com.github.nradov.diveexiftagger.image.jpeg.Utilities.formatShortAsUnsignedHex;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,13 +20,14 @@ import java.util.function.Supplier;
 import com.adobe.internal.xmp.XMPException;
 
 @SuppressWarnings("serial")
-public class JpegExif implements Serializable {
+public class JpegExif {
 
-    private final List<Segment> segments = new ArrayList<>(7);
+    private final List<Segment> segments = new ArrayList<>(8);
 
-    /** End of image. */
-    private static final short EOI = (short) 0xFFD9;
-
+    /**
+     * Map from JPEG/Exif segment markers to constructors for the corresponding
+     * classes.
+     */
     // TODO:
     // http://minborgsjavapot.blogspot.com/2014/12/java-8-initializing-maps-in-smartest-way.html
     private static final Map<java.lang.Short, Supplier<? extends Segment>> SEGMENT_MARKER_CTOR_MAP = Collections
@@ -38,15 +39,21 @@ public class JpegExif implements Serializable {
                                     ApplicationSpecific1::new);
                             put(DefineQuantizationTable.MARKER,
                                     DefineQuantizationTable::new);
-                            put(StartOfFrame.MARKER, StartOfFrame::new);
+                            put(StartOfFrameBaseline.MARKER,
+                                    StartOfFrameBaseline::new);
+                            put(StartOfFrameProgressive.MARKER,
+                                    StartOfFrameProgressive::new);
                             put(DefineHuffmanTable.MARKER,
                                     DefineHuffmanTable::new);
                             put(StartOfScan.MARKER, StartOfScan::new);
+                            put(EndOfImage.MARKER, EndOfImage::new);
+                            put(DefineRestartInterval.MARKER,
+                                    DefineRestartInterval::new);
                         }
                     });
 
-    protected JpegExif() {
-        // for serialization only
+    public JpegExif(final String path) throws IOException, XMPException {
+        this(Paths.get(path));
     }
 
     public JpegExif(final Path path) throws IOException, XMPException {
@@ -56,9 +63,9 @@ public class JpegExif implements Serializable {
 
     public JpegExif(final SeekableByteChannel channel)
             throws IOException, XMPException {
-        final ByteBuffer dst = ByteBuffer.allocate(2);
+        final ByteBuffer dst = ByteBuffer.allocate(java.lang.Short.BYTES);
         while (channel.position() < channel.size()) {
-            if (channel.read(dst) != 2) {
+            if (channel.read(dst) != java.lang.Short.BYTES) {
                 throw new IllegalStateException();
             }
             dst.flip();
@@ -88,24 +95,31 @@ public class JpegExif implements Serializable {
             channel.transferFrom(segment, position, length);
             position += length;
         }
-        channel.write(TiffUtilities.convertToByteBuffer(EOI));
     }
 
-    public Optional<Rational> getFieldRational(final TiffFieldTag tag) {
-        for (final Segment segment : segments) {
-            if (segment instanceof ApplicationSpecific1) {
-                final Optional<Rational> o = ((ApplicationSpecific1) segment)
-                        .getFieldRational(tag);
-                if (o.isPresent()) {
-                    return o;
-                }
+    public Optional<Rational> getFieldRational(final FieldTag tag) {
+        for (final Segment segment : getSegments()) {
+            final Optional<Rational> o = segment.getFieldRational(tag);
+            if (o.isPresent()) {
+                return o;
             }
         }
         return Optional.empty();
     }
 
     public Optional<Rational> getGpsAltitude() {
-        return getFieldRational(TiffFieldTag.GpsAltitude);
+        return getFieldRational(FieldTag.GpsAltitude);
+    }
+
+    List<Segment> getSegments() {
+        return Collections.unmodifiableList(segments);
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        getSegments().forEach((k) -> sb.append(k));
+        return sb.toString();
     }
 
 }

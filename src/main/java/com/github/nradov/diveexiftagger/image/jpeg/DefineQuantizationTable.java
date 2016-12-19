@@ -1,6 +1,6 @@
 package com.github.nradov.diveexiftagger.image.jpeg;
 
-class DefineQuantizationTable extends VariableLengthSegment {
+class DefineQuantizationTable extends ImmutableByteSegment {
 
     static final short MARKER = (short) 0xFFDB;
 
@@ -11,6 +11,11 @@ class DefineQuantizationTable extends VariableLengthSegment {
     @Override
     short getMarker() {
         return MARKER;
+    }
+
+    @Override
+    int getLength() {
+        throw new UnsupportedOperationException("not implemented yet");
     }
 
 }

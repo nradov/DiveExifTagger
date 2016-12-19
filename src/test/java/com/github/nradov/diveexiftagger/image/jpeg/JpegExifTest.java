@@ -22,7 +22,7 @@ public class JpegExifTest {
         final Path imageFile = Paths
                 .get(getClass().getResource("/IMG_8687.JPG").toURI());
         final JpegExif jpeg = new JpegExif(imageFile);
-
+        jpeg.toString();
         assertEquals(0, new BigDecimal("6.1").compareTo(jpeg.getGpsAltitude()
                 .get().toBigDecimal(RoundingMode.UNNECESSARY)));
         final Path temp = Files.createTempFile(null, null);

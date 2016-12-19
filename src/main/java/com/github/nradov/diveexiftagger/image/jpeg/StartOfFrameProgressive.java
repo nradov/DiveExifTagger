@@ -1,10 +1,10 @@
 package com.github.nradov.diveexiftagger.image.jpeg;
 
-class DefineHuffmanTable extends ImmutableByteSegment {
+class StartOfFrameProgressive extends ImmutableByteSegment {
 
-    static final short MARKER = (short) 0xFFC4;
+    static final short MARKER = (short) 0xFFC2;
 
-    DefineHuffmanTable() {
+    StartOfFrameProgressive() {
 
     }
 

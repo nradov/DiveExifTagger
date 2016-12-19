@@ -28,4 +28,7 @@ package com.github.nradov.diveexiftagger.image.jpeg;
  * @see <a target="_" title="Adobe Developers Association" href=
  *      "https://partners.adobe.com/public/developer/en/tiff/TIFF6.pdf">TIFF
  *      Revision 6.0</a>
+ * @see <a target="_" title="Wikibooks" href=
+ *      "https://en.wikibooks.org/wiki/Category:JPEG_-_Idea_and_Practice">JPEG -
+ *      Idea and Practice</a>
  */

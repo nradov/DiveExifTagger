@@ -1,7 +1,7 @@
 package com.github.nradov.diveexiftagger.image.jpeg;
 
-import static com.github.nradov.diveexiftagger.image.jpeg.TiffUtilities.convertToInt;
-import static com.github.nradov.diveexiftagger.image.jpeg.TiffUtilities.convertToShort;
+import static com.github.nradov.diveexiftagger.image.jpeg.Utilities.convertToInt;
+import static com.github.nradov.diveexiftagger.image.jpeg.Utilities.convertToShort;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -19,7 +19,7 @@ import java.util.Optional;
  */
 class ImageFileDirectory implements ReadableByteChannel {
 
-    private final List<TiffDirectoryEntry> directoryEntries;
+    private final List<DirectoryEntry> directoryEntries;
     private ImageFileDirectory exif;
     private ImageFileDirectory gps;
     private final int nextIfdOffset;
@@ -31,17 +31,17 @@ class ImageFileDirectory implements ReadableByteChannel {
                 byteOrder);
         directoryEntries = new ArrayList<>(numberOfDirectoryEntries);
         for (index += 2; directoryEntries
-                .size() < numberOfDirectoryEntries; index += TiffDirectoryEntry.BYTES) {
-            final TiffDirectoryEntry entry = new TiffDirectoryEntry(b, index,
+                .size() < numberOfDirectoryEntries; index += DirectoryEntry.BYTES) {
+            final DirectoryEntry entry = new DirectoryEntry(b, index,
                     byteOrder);
             directoryEntries.add(entry);
         }
         nextIfdOffset = convertToInt(b, index, byteOrder);
-        for (final TiffDirectoryEntry entry : directoryEntries) {
-            if (entry.getTag().equals(TiffFieldTag.ExifIfdPointer)) {
+        for (final DirectoryEntry entry : directoryEntries) {
+            if (entry.getTag().equals(FieldTag.ExifIfdPointer)) {
                 exif = new ImageFileDirectory(b, entry.getValueLong(),
                         byteOrder);
-            } else if (entry.getTag().equals(TiffFieldTag.GpsInfoIfdPointer)) {
+            } else if (entry.getTag().equals(FieldTag.GpsInfoIfdPointer)) {
                 gps = new ImageFileDirectory(b, entry.getValueLong(),
                         byteOrder);
             }
@@ -51,9 +51,9 @@ class ImageFileDirectory implements ReadableByteChannel {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        for (final TiffDirectoryEntry field : getDirectoryEntries()) {
+        for (final DirectoryEntry field : getDirectoryEntries()) {
             sb.append(field);
-            sb.append(TiffUtilities.LINE_SEPARATOR);
+            sb.append(Utilities.LINE_SEPARATOR);
         }
         return sb.toString();
     }
@@ -62,7 +62,7 @@ class ImageFileDirectory implements ReadableByteChannel {
         return (short) directoryEntries.size();
     }
 
-    List<TiffDirectoryEntry> getDirectoryEntries() {
+    List<DirectoryEntry> getDirectoryEntries() {
         return Collections.unmodifiableList(directoryEntries);
     }
 
@@ -88,7 +88,7 @@ class ImageFileDirectory implements ReadableByteChannel {
         }
         dst.putShort((short) directoryEntries.size());
         bytes += java.lang.Short.BYTES;
-        for (final TiffDirectoryEntry entry : directoryEntries) {
+        for (final DirectoryEntry entry : directoryEntries) {
             bytes += entry.read(dst);
         }
         dst.putInt(nextIfdOffset);
@@ -96,8 +96,8 @@ class ImageFileDirectory implements ReadableByteChannel {
         return bytes;
     }
 
-    public Optional<Rational> getFieldRational(final TiffFieldTag tag) {
-        for (final TiffDirectoryEntry entry : directoryEntries) {
+    public Optional<Rational> getFieldRational(final FieldTag tag) {
+        for (final DirectoryEntry entry : directoryEntries) {
             if (entry.getTag().equals(tag)) {
                 return Optional.of(entry.getValueRational());
             }
@@ -115,6 +115,10 @@ class ImageFileDirectory implements ReadableByteChannel {
             }
         }
         return Optional.empty();
+    }
+
+    int getLength() {
+        throw new UnsupportedOperationException("not implemented yet");
     }
 
 }

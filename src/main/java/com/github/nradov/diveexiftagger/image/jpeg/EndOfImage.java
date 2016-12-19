@@ -1,11 +1,8 @@
 package com.github.nradov.diveexiftagger.image.jpeg;
 
-class StartOfScan extends ImmutableByteSegment {
+public class EndOfImage extends NoPayloadSegment {
 
-    static final short MARKER = (short) 0xFFDA;
-
-    StartOfScan() {
-    }
+    static final short MARKER = (short) 0xFFD9;
 
     @Override
     short getMarker() {

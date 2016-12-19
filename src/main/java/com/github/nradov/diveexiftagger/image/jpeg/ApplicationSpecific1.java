@@ -33,10 +33,14 @@ class ApplicationSpecific1 extends VariableLengthSegment {
     void populate(final SeekableByteChannel channel)
             throws IOException, XMPException {
         final ByteBuffer dst = ByteBuffer.allocate(java.lang.Short.BYTES);
-        populateLength(channel, dst);
-        if (getLength() > java.lang.Short.BYTES) {
+        if (channel.read(dst) != dst.capacity()) {
+            throw new IOException("no length");
+        }
+        dst.flip();
+        final short length = dst.getShort();
+        if (length > java.lang.Short.BYTES) {
             final ByteBuffer body = ByteBuffer
-                    .allocate(getLength() - dst.capacity());
+                    .allocate(length - dst.capacity());
             if (channel.read(body) != body.capacity()) {
                 throw new IOException("unexpected end of channel");
             }
@@ -70,11 +74,17 @@ class ApplicationSpecific1 extends VariableLengthSegment {
     }
 
     @Override
-    public int read(final ByteBuffer dst) throws IOException {
-        return contents.read(dst);
+    public int getLength() {
+        return java.lang.Short.BYTES + contents.getLength();
     }
 
-    public Optional<Rational> getFieldRational(final TiffFieldTag tag) {
+    @Override
+    public int read(final ByteBuffer dst) throws IOException {
+        return super.read(dst) + contents.read(dst);
+    }
+
+    @Override
+    public Optional<Rational> getFieldRational(final FieldTag tag) {
         return contents.getFieldRational(tag);
     }
 

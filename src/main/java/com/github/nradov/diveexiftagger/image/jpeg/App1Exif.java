@@ -1,7 +1,7 @@
 package com.github.nradov.diveexiftagger.image.jpeg;
 
-import static com.github.nradov.diveexiftagger.image.jpeg.TiffUtilities.convertToInt;
-import static com.github.nradov.diveexiftagger.image.jpeg.TiffUtilities.convertToShort;
+import static com.github.nradov.diveexiftagger.image.jpeg.Utilities.convertToInt;
+import static com.github.nradov.diveexiftagger.image.jpeg.Utilities.convertToShort;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -61,8 +61,6 @@ class App1Exif extends App1Contents {
 
     @Override
     public int read(final ByteBuffer dst) throws IOException {
-        // TODO: calculate the actual limit
-        dst.limit(1000000);
         int bytes = 0;
         dst.put(EXIF);
         bytes += EXIF.length;
@@ -84,7 +82,7 @@ class App1Exif extends App1Contents {
     }
 
     @Override
-    public Optional<Rational> getFieldRational(final TiffFieldTag tag) {
+    public Optional<Rational> getFieldRational(final FieldTag tag) {
         for (final ImageFileDirectory ifd : ifds) {
             final Optional<Rational> o = ifd.getFieldRational(tag);
             if (o.isPresent()) {
@@ -92,6 +90,15 @@ class App1Exif extends App1Contents {
             }
         }
         return Optional.empty();
+    }
+
+    @Override
+    int getLength() {
+        int length = EXIF.length + ByteOrderConstants.LITTLE_ENDIAN.length();
+        for (final ImageFileDirectory dir : ifds) {
+            length += dir.getLength();
+        }
+        return length;
     }
 
 }

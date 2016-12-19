@@ -16,6 +16,8 @@ abstract class App1Contents implements ReadableByteChannel {
         // do nothing
     }
 
-    abstract public Optional<Rational> getFieldRational(TiffFieldTag tag);
+    abstract public Optional<Rational> getFieldRational(FieldTag tag);
+
+    abstract int getLength();
 
 }

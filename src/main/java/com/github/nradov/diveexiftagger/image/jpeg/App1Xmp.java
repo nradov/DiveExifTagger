@@ -43,16 +43,19 @@ class App1Xmp extends App1Contents {
     public int read(final ByteBuffer dst) throws IOException {
         final byte[] bytes = xmp.toString()
                 .getBytes(StandardCharsets.ISO_8859_1);
-        // TODO: calculate the actual limit
-        dst.limit(1000000);
         dst.put(bytes);
         return bytes.length;
     }
 
     @Override
-    public Optional<Rational> getFieldRational(final TiffFieldTag tag) {
+    public Optional<Rational> getFieldRational(final FieldTag tag) {
         // TODO: look for tag
         return Optional.empty();
+    }
+
+    @Override
+    int getLength() {
+        throw new UnsupportedOperationException("not implemented yet");
     }
 
 }

@@ -73,8 +73,8 @@ public class Rational extends DataType {
     public BigDecimal toBigDecimal(final RoundingMode roundingMode) {
         final BigDecimal numBD = numerator.toBigDecimal();
         final BigDecimal denBD = denominator.toBigDecimal();
-        return numBD.divide(denBD, numBD.precision() + denBD.precision(),
-                roundingMode);
+        final int scale = Math.min(numBD.precision(), denBD.precision());
+        return numBD.divide(denBD, scale, roundingMode);
     }
 
 }

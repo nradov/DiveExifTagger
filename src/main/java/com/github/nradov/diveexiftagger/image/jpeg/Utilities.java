@@ -4,11 +4,11 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Locale;
 
-final class TiffUtilities {
+final class Utilities {
 
     static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
-    private TiffUtilities() {
+    private Utilities() {
         // do not instantiate
     }
 

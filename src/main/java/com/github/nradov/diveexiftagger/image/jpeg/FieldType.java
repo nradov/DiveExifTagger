@@ -1,6 +1,6 @@
 package com.github.nradov.diveexiftagger.image.jpeg;
 
-import static com.github.nradov.diveexiftagger.image.jpeg.TiffUtilities.formatShortAsUnsignedHex;
+import static com.github.nradov.diveexiftagger.image.jpeg.Utilities.formatShortAsUnsignedHex;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -14,7 +14,7 @@ import java.util.Map;
  *      Revision 6.0</a> Section 2 page 15
  * @author Nick Radov
  */
-enum TiffFieldType {
+enum FieldType {
 
     /** 8-bit unsigned integer. */
     BYTE(1, java.lang.Byte.BYTES),
@@ -67,7 +67,7 @@ enum TiffFieldType {
     private final short type;
     private int length;
 
-    private TiffFieldType(final int type, final int length) {
+    private FieldType(final int type, final int length) {
         this.type = (short) type;
         this.length = length;
     }
@@ -81,16 +81,16 @@ enum TiffFieldType {
     }
 
     @SuppressWarnings("serial")
-    private static final Map<java.lang.Short, TiffFieldType> MAP = Collections
-            .unmodifiableMap(new HashMap<java.lang.Short, TiffFieldType>() {
+    private static final Map<java.lang.Short, FieldType> MAP = Collections
+            .unmodifiableMap(new HashMap<java.lang.Short, FieldType>() {
                 {
-                    for (final TiffFieldType value : TiffFieldType.values()) {
+                    for (final FieldType value : FieldType.values()) {
                         put(value.getType(), value);
                     }
                 }
             });
 
-    static TiffFieldType valueOf(final short type) {
+    static FieldType valueOf(final short type) {
         if (MAP.containsKey(type)) {
             return MAP.get(type);
         } else {

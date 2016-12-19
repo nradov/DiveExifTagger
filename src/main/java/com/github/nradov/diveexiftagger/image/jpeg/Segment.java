@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SeekableByteChannel;
+import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 import com.adobe.internal.xmp.XMPException;
 
@@ -23,10 +25,8 @@ abstract class Segment implements ReadableByteChannel {
      */
     abstract short getMarker();
 
-    void populate(final SeekableByteChannel channel)
-            throws IOException, XMPException {
-        // do nothing
-    }
+    abstract void populate(final SeekableByteChannel channel)
+            throws IOException, XMPException;
 
     @Override
     public boolean isOpen() {
@@ -42,6 +42,28 @@ abstract class Segment implements ReadableByteChannel {
     public int read(final ByteBuffer dst) throws IOException {
         dst.putShort(getMarker());
         return java.lang.Short.BYTES;
+    }
+
+    public Optional<? extends DataType> getField(final FieldTag tag) {
+        return Optional.empty();
+    }
+
+    public Optional<Rational> getFieldRational(final FieldTag tag) {
+        return Optional.empty();
+    }
+
+    @Override
+    public String toString() {
+        final ByteBuffer b = ByteBuffer.allocate(getLength());
+        try {
+            if (read(b) != getLength()) {
+                throw new IllegalStateException();
+            }
+        } catch (final IOException e) {
+            // can't throw a checked exception here
+            throw new IllegalStateException(e);
+        }
+        return new String(b.array(), StandardCharsets.ISO_8859_1);
     }
 
 }

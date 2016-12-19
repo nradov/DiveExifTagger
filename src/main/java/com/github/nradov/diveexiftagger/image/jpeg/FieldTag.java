@@ -1,13 +1,13 @@
 package com.github.nradov.diveexiftagger.image.jpeg;
 
-import static com.github.nradov.diveexiftagger.image.jpeg.TiffFieldType.ASCII;
-import static com.github.nradov.diveexiftagger.image.jpeg.TiffFieldType.BYTE;
-import static com.github.nradov.diveexiftagger.image.jpeg.TiffFieldType.LONG;
-import static com.github.nradov.diveexiftagger.image.jpeg.TiffFieldType.RATIONAL;
-import static com.github.nradov.diveexiftagger.image.jpeg.TiffFieldType.SHORT;
-import static com.github.nradov.diveexiftagger.image.jpeg.TiffFieldType.SRATIONAL;
-import static com.github.nradov.diveexiftagger.image.jpeg.TiffFieldType.UNDEFINED;
-import static com.github.nradov.diveexiftagger.image.jpeg.TiffUtilities.formatShortAsUnsignedHex;
+import static com.github.nradov.diveexiftagger.image.jpeg.FieldType.ASCII;
+import static com.github.nradov.diveexiftagger.image.jpeg.FieldType.BYTE;
+import static com.github.nradov.diveexiftagger.image.jpeg.FieldType.LONG;
+import static com.github.nradov.diveexiftagger.image.jpeg.FieldType.RATIONAL;
+import static com.github.nradov.diveexiftagger.image.jpeg.FieldType.SHORT;
+import static com.github.nradov.diveexiftagger.image.jpeg.FieldType.SRATIONAL;
+import static com.github.nradov.diveexiftagger.image.jpeg.FieldType.UNDEFINED;
+import static com.github.nradov.diveexiftagger.image.jpeg.Utilities.formatShortAsUnsignedHex;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -23,7 +23,7 @@ import java.util.Set;
  *      "http://www.sno.phy.queensu.ca/~phil/exiftool/TagNames/EXIF.html" title=
  *      "ExifTool by Phil Harvey">EXIF Tags</a>
  */
-public enum TiffFieldTag {
+public enum FieldTag {
 
     /** The lens aperture. The unit is the APEX value. */
     ApertureValue(37378, RATIONAL),
@@ -968,12 +968,12 @@ public enum TiffFieldTag {
     YResolution(283, RATIONAL);
 
     private final short tag;
-    private final Set<TiffFieldType> types;
+    private final Set<FieldType> types;
 
-    private TiffFieldTag(final int tag, final TiffFieldType... type) {
+    private FieldTag(final int tag, final FieldType... type) {
         this.tag = (short) tag;
         this.types = new HashSet<>(type.length);
-        for (final TiffFieldType element : type) {
+        for (final FieldType element : type) {
             this.types.add(element);
         }
     }
@@ -984,16 +984,16 @@ public enum TiffFieldTag {
 
     /** Map from tag numbers to objects. */
     @SuppressWarnings("serial")
-    private static final Map<java.lang.Short, TiffFieldTag> SHORT_TAG_MAP = Collections
-            .unmodifiableMap(new HashMap<java.lang.Short, TiffFieldTag>() {
+    private static final Map<java.lang.Short, FieldTag> SHORT_TAG_MAP = Collections
+            .unmodifiableMap(new HashMap<java.lang.Short, FieldTag>() {
                 {
-                    for (final TiffFieldTag value : TiffFieldTag.values()) {
+                    for (final FieldTag value : FieldTag.values()) {
                         put(value.getTag(), value);
                     }
                 }
             });
 
-    static TiffFieldTag valueOf(final short tag) {
+    static FieldTag valueOf(final short tag) {
         if (SHORT_TAG_MAP.containsKey(tag)) {
             return SHORT_TAG_MAP.get(tag);
         } else {

@@ -1,8 +1,8 @@
 package com.github.nradov.diveexiftagger.image.jpeg;
 
-import static com.github.nradov.diveexiftagger.image.jpeg.TiffUtilities.convertToBytes;
-import static com.github.nradov.diveexiftagger.image.jpeg.TiffUtilities.convertToInt;
-import static com.github.nradov.diveexiftagger.image.jpeg.TiffUtilities.convertToShort;
+import static com.github.nradov.diveexiftagger.image.jpeg.Utilities.convertToBytes;
+import static com.github.nradov.diveexiftagger.image.jpeg.Utilities.convertToInt;
+import static com.github.nradov.diveexiftagger.image.jpeg.Utilities.convertToShort;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -11,7 +11,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-class TiffDirectoryEntry implements ReadableByteChannel {
+class DirectoryEntry implements ReadableByteChannel {
 
     private final byte[] tiff;
     private final ByteOrder byteOrder;
@@ -23,7 +23,7 @@ class TiffDirectoryEntry implements ReadableByteChannel {
     static final int BYTES = java.lang.Short.BYTES + java.lang.Short.BYTES
             + Integer.BYTES + Integer.BYTES;
 
-    TiffDirectoryEntry(final byte[] tiff, final int index,
+    DirectoryEntry(final byte[] tiff, final int index,
             final ByteOrder byteOrder) {
         this.tiff = tiff;
         this.byteOrder = byteOrder;
@@ -38,12 +38,12 @@ class TiffDirectoryEntry implements ReadableByteChannel {
         System.err.println(this);
     }
 
-    TiffFieldTag getTag() {
-        return TiffFieldTag.valueOf(tag);
+    FieldTag getTag() {
+        return FieldTag.valueOf(tag);
     }
 
-    TiffFieldType getType() {
-        return TiffFieldType.valueOf(type);
+    FieldType getType() {
+        return FieldType.valueOf(type);
     }
 
     int getCount() {
@@ -68,7 +68,7 @@ class TiffDirectoryEntry implements ReadableByteChannel {
     }
 
     String getValueAscii() {
-        if (TiffFieldType.ASCII.equals(getType())) {
+        if (FieldType.ASCII.equals(getType())) {
             return new String(tiff, valueOrOffset, count,
                     StandardCharsets.ISO_8859_1);
         } else {
@@ -79,7 +79,7 @@ class TiffDirectoryEntry implements ReadableByteChannel {
 
     String getValueUndefined() {
         final String s;
-        if (TiffFieldType.UNDEFINED.equals(getType())) {
+        if (FieldType.UNDEFINED.equals(getType())) {
             if (getCount() <= Integer.BYTES) {
                 final byte[] b = convertToBytes(getValueOrOffset(), byteOrder);
                 s = new String(b, StandardCharsets.ISO_8859_1);
@@ -98,7 +98,7 @@ class TiffDirectoryEntry implements ReadableByteChannel {
     }
 
     short getValueShort() {
-        if (TiffFieldType.SHORT.equals(getType())) {
+        if (FieldType.SHORT.equals(getType())) {
             return (short) valueOrOffset;
         } else {
             throw new UnsupportedOperationException(
@@ -107,7 +107,7 @@ class TiffDirectoryEntry implements ReadableByteChannel {
     }
 
     int getValueLong() {
-        if (TiffFieldType.LONG.equals(getType())) {
+        if (FieldType.LONG.equals(getType())) {
             return valueOrOffset;
         } else {
             throw new UnsupportedOperationException(
@@ -116,8 +116,8 @@ class TiffDirectoryEntry implements ReadableByteChannel {
     }
 
     int getValueRationalNumerator() {
-        if (TiffFieldType.RATIONAL.equals(getType())
-                || TiffFieldType.SRATIONAL.equals(getType())) {
+        if (FieldType.RATIONAL.equals(getType())
+                || FieldType.SRATIONAL.equals(getType())) {
             // TODO: should be long
             return convertToInt(tiff, valueOrOffset, byteOrder);
         } else {
@@ -127,8 +127,8 @@ class TiffDirectoryEntry implements ReadableByteChannel {
     }
 
     int getValueRationalDenominator() {
-        if (TiffFieldType.RATIONAL.equals(getType())
-                || TiffFieldType.SRATIONAL.equals(getType())) {
+        if (FieldType.RATIONAL.equals(getType())
+                || FieldType.SRATIONAL.equals(getType())) {
             return convertToInt(tiff, valueOrOffset + Integer.BYTES, byteOrder);
         } else {
             throw new UnsupportedOperationException(

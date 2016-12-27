@@ -1,11 +1,15 @@
 package com.github.nradov.diveexiftagger.image.jpeg;
 
+import java.io.IOException;
+import java.nio.channels.SeekableByteChannel;
+
 class StartOfFrameProgressive extends ImmutableByteSegment {
 
     static final short MARKER = (short) 0xFFC2;
 
-    StartOfFrameProgressive() {
-
+    StartOfFrameProgressive(final SeekableByteChannel channel)
+            throws IOException {
+        super(channel);
     }
 
     @Override

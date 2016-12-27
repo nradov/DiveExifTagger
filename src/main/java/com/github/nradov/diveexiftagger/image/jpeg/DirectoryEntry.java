@@ -1,144 +1,147 @@
 package com.github.nradov.diveexiftagger.image.jpeg;
 
-import static com.github.nradov.diveexiftagger.image.jpeg.Utilities.convertToBytes;
 import static com.github.nradov.diveexiftagger.image.jpeg.Utilities.convertToInt;
 import static com.github.nradov.diveexiftagger.image.jpeg.Utilities.convertToShort;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-class DirectoryEntry implements ReadableByteChannel {
+/**
+ * Single metadata directory entry.
+ *
+ * @author Nick Radov
+ */
+/*
+ * This class can't implement ReadableByteChannel because there isn't
+ * necessarily a single length or stream of bytes. The actual value may be
+ * offset.
+ */
+class DirectoryEntry {
+
+    static final int BYTES = 12;
 
     private final byte[] tiff;
     private final ByteOrder byteOrder;
-    private final short tag;
-    private final short type;
-    private final int count;
-    private final int valueOrOffset;
+    private final FieldTag tag;
+    private final FieldType type;
+    private final List<DataType> value;
 
-    static final int BYTES = java.lang.Short.BYTES + java.lang.Short.BYTES
-            + Integer.BYTES + Integer.BYTES;
+    @SuppressWarnings("serial")
+    private static final Map<FieldType, DataTypeSupplier> DATA_TYPE_CTOR_MAP = Collections
+            .unmodifiableMap(new HashMap<FieldType, DataTypeSupplier>() {
+                {
+                    for (final FieldType fieldType : EnumSet
+                            .allOf(FieldType.class)) {
+                        put(fieldType, fieldType.getSupplier());
+                    }
+                }
+            });
 
     DirectoryEntry(final byte[] tiff, final int index,
             final ByteOrder byteOrder) {
         this.tiff = tiff;
         this.byteOrder = byteOrder;
         int newIndex = index;
-        tag = convertToShort(tiff, newIndex, byteOrder);
+        tag = FieldTag.valueOf(convertToShort(tiff, newIndex, byteOrder));
         newIndex += java.lang.Short.BYTES;
-        type = convertToShort(tiff, newIndex, byteOrder);
+        type = FieldType.valueOf(convertToShort(tiff, newIndex, byteOrder));
         newIndex += java.lang.Short.BYTES;
-        count = convertToInt(tiff, newIndex, byteOrder);
+        final DataTypeSupplier supplier;
+        if (DATA_TYPE_CTOR_MAP.containsKey(type)) {
+            supplier = DATA_TYPE_CTOR_MAP.get(type);
+        } else {
+            throw new IllegalStateException(
+                    "no constructor map entry for " + type);
+        }
+        final int count = convertToInt(tiff, newIndex, byteOrder);
         newIndex += Integer.BYTES;
-        valueOrOffset = convertToInt(tiff, newIndex, byteOrder);
+        value = new ArrayList<>(count);
+        if (count * type.getLength() <= Integer.BYTES) {
+            // value itself
+            for (int i = 0; i < count; i++) {
+                value.add(supplier.construct(tiff, newIndex, byteOrder));
+                newIndex += type.getLength();
+            }
+        } else {
+            // offset
+            int offset = convertToInt(tiff, newIndex, byteOrder);
+            newIndex += Integer.BYTES;
+            for (int i = 0; i < count; i++) {
+                value.add(supplier.construct(tiff, offset, byteOrder));
+                offset += type.getLength();
+            }
+        }
+        newIndex += Integer.BYTES;
         System.err.println(this);
     }
 
+    /**
+     * Get the field tag. Each tag is assigned a unique 2-byte number to
+     * identify the field. The tag numbers in the Exif 0th IFD and 1st IFD are
+     * all the same as the TIFF tag numbers.
+     *
+     * @return metadata field tag
+     */
     FieldTag getTag() {
-        return FieldTag.valueOf(tag);
+        return tag;
     }
 
     FieldType getType() {
-        return FieldType.valueOf(type);
+        return type;
     }
 
-    int getCount() {
-        return count;
+    /**
+     * Get the number of values. It should be noted carefully that the count is
+     * not the sum of the bytes. In the case of one value of SHORT (16 bits),
+     * for example, the count is '1' even though it is 2 Bytes.
+     *
+     * @return number of values
+     */
+    short getCount() {
+        return (short) value.size();
     }
 
-    int getValueOrOffset() {
-        return valueOrOffset;
+    List<? extends DataType> getValue() {
+        return value;
     }
 
-    byte[] getValueByte() {
-        if (getCount() <= Integer.BYTES) {
-            final byte[] b = convertToBytes(getValueOrOffset(), byteOrder);
-            if (b.length > getCount()) {
-                return Arrays.copyOfRange(b, 0, getCount());
-            } else {
-                return b;
-            }
-        } else {
-            throw new UnsupportedOperationException();
-        }
+    Ascii getValueAscii() {
+        return getFirstValue(FieldType.ASCII);
     }
 
-    String getValueAscii() {
-        if (FieldType.ASCII.equals(getType())) {
-            return new String(tiff, valueOrOffset, count,
-                    StandardCharsets.ISO_8859_1);
-        } else {
-            throw new UnsupportedOperationException(
-                    "invalid field type: " + getType());
-        }
+    Byte getValueByte() {
+        return getFirstValue(FieldType.BYTE);
     }
 
-    String getValueUndefined() {
-        final String s;
-        if (FieldType.UNDEFINED.equals(getType())) {
-            if (getCount() <= Integer.BYTES) {
-                final byte[] b = convertToBytes(getValueOrOffset(), byteOrder);
-                s = new String(b, StandardCharsets.ISO_8859_1);
-            } else {
-                s = new String(tiff, valueOrOffset, count,
-                        StandardCharsets.ISO_8859_1);
-            }
-            if (s.length() > getCount()) {
-                return s.substring(0, getCount());
-            }
-            return s;
-        } else {
-            throw new UnsupportedOperationException(
-                    "invalid field type: " + getType());
-        }
+    Short getValueShort() {
+        return getFirstValue(FieldType.SHORT);
     }
 
-    short getValueShort() {
-        if (FieldType.SHORT.equals(getType())) {
-            return (short) valueOrOffset;
-        } else {
-            throw new UnsupportedOperationException(
-                    "invalid field type: " + getType());
-        }
+    Long getValueLong() {
+        return getFirstValue(FieldType.LONG);
     }
 
-    int getValueLong() {
-        if (FieldType.LONG.equals(getType())) {
-            return valueOrOffset;
-        } else {
-            throw new UnsupportedOperationException(
-                    "invalid field type: " + getType());
-        }
-    }
-
-    int getValueRationalNumerator() {
-        if (FieldType.RATIONAL.equals(getType())
-                || FieldType.SRATIONAL.equals(getType())) {
-            // TODO: should be long
-            return convertToInt(tiff, valueOrOffset, byteOrder);
-        } else {
-            throw new UnsupportedOperationException(
-                    "invalid field type: " + getType());
-        }
-    }
-
-    int getValueRationalDenominator() {
-        if (FieldType.RATIONAL.equals(getType())
-                || FieldType.SRATIONAL.equals(getType())) {
-            return convertToInt(tiff, valueOrOffset + Integer.BYTES, byteOrder);
-        } else {
-            throw new UnsupportedOperationException(
-                    "invalid field type: " + getType());
-        }
+    Undefined getValueUndefined() {
+        return getFirstValue(FieldType.UNDEFINED);
     }
 
     Rational getValueRational() {
-        return new Rational(getValueRationalNumerator(),
-                getValueRationalDenominator());
+        return getFirstValue(FieldType.RATIONAL);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T extends DataType> T getFirstValue(final FieldType expected) {
+        if (expected.equals(getType())) {
+            return (T) expected.getValueClass().cast(value.get(0));
+        } else {
+            throw new UnsupportedOperationException(
+                    "invalid field type: " + getType());
+        }
     }
 
     @Override
@@ -146,69 +149,8 @@ class DirectoryEntry implements ReadableByteChannel {
         final StringBuilder sb = new StringBuilder();
         sb.append(getTag());
         sb.append(" = ");
-        switch (getType()) {
-        case ASCII:
-            sb.append('"').append(getValueAscii()).append('"');
-            break;
-        case BYTE:
-            sb.append(convertByteArrayToString(getValueByte()));
-            break;
-        case SHORT:
-            sb.append(java.lang.Short.toUnsignedInt(getValueShort()));
-            break;
-        case LONG:
-            sb.append(Integer.toUnsignedString(getValueLong()));
-            break;
-        case RATIONAL:
-        case SRATIONAL:
-            sb.append(Integer.toUnsignedString(getValueRationalNumerator()))
-                    .append('/').append(Integer
-                            .toUnsignedString(getValueRationalDenominator()));
-            break;
-        case UNDEFINED:
-            sb.append('"').append(getValueUndefined()).append('"');
-            break;
-        default:
-            throw new UnsupportedOperationException(
-                    "unsupported field type: " + getType());
-        }
+        sb.append(value);
         return sb.toString();
-    }
-
-    private static String convertByteArrayToString(final byte[] b) {
-        final StringBuilder sb = new StringBuilder();
-        sb.append('[');
-        for (int i = 0; i < b.length; i++) {
-            sb.append(java.lang.Byte.toUnsignedInt(b[i]));
-            if (i < b.length - 1) {
-                sb.append(", ");
-            }
-        }
-        sb.append(']');
-        return sb.toString();
-    }
-
-    @Override
-    public boolean isOpen() {
-        return true;
-    }
-
-    @Override
-    public void close() throws IOException {
-        // do nothing
-    }
-
-    @Override
-    public int read(final ByteBuffer dst) throws IOException {
-        dst.putShort(tag);
-        dst.putShort(type);
-        dst.putInt(count);
-        dst.putInt(valueOrOffset);
-        return BYTES;
-    }
-
-    public int getLength() {
-        return BYTES;
     }
 
 }

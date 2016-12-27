@@ -19,6 +19,17 @@ final class Utilities {
                 .order(byteOrder).getShort();
     }
 
+    /**
+     * Convert 4 bytes to an integer.
+     *
+     * @param array
+     *            array containing the bytes to be converted
+     * @param offset
+     *            starting position within the array
+     * @param byteOrder
+     *            byte order (big or little endian)
+     * @return the converted value
+     */
     static int convertToInt(final byte[] array, final int offset,
             final ByteOrder byteOrder) {
         return ByteBuffer.wrap(array, offset, Integer.BYTES).order(byteOrder)
@@ -47,6 +58,19 @@ final class Utilities {
                 + Integer.toHexString(java.lang.Short.toUnsignedInt(s))
                         .toUpperCase(Locale.US);
         return "0x" + hex.substring(hex.length() - 4);
+    }
+
+    static String convertByteArrayToString(final byte[] b) {
+        final StringBuilder sb = new StringBuilder();
+        sb.append('[');
+        for (int i = 0; i < b.length; i++) {
+            sb.append(java.lang.Byte.toUnsignedInt(b[i]));
+            if (i < b.length - 1) {
+                sb.append(", ");
+            }
+        }
+        sb.append(']');
+        return sb.toString();
     }
 
 }

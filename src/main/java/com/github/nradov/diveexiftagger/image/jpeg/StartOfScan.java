@@ -6,28 +6,24 @@ import java.nio.channels.SeekableByteChannel;
 import java.util.ArrayList;
 import java.util.List;
 
-class StartOfScan extends ImmutableByteSegment {
+class StartOfScan extends VariableLengthSegment {
 
     static final short MARKER = (short) 0xFFDA;
 
-    private List<Component> components;
+    private final List<Component> components;
 
-    private byte startOfSpectralSelection;
-    private byte endOfSpectralSelection;
-    private byte successiveApproximation;
+    private final byte startOfSpectralSelection;
+    private final byte endOfSpectralSelection;
+    private final byte successiveApproximation;
 
-    private byte[] compressed;
-
-    StartOfScan() {
-    }
+    private final byte[] compressed;
 
     @Override
     short getMarker() {
         return MARKER;
     }
 
-    @Override
-    void populate(final SeekableByteChannel channel) throws IOException {
+    StartOfScan(final SeekableByteChannel channel) throws IOException {
         ByteBuffer dst = ByteBuffer.allocate(java.lang.Short.BYTES);
         channel.read(dst);
         dst.flip();

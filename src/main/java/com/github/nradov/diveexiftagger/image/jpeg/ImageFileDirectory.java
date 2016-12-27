@@ -39,10 +39,10 @@ class ImageFileDirectory implements ReadableByteChannel {
         nextIfdOffset = convertToInt(b, index, byteOrder);
         for (final DirectoryEntry entry : directoryEntries) {
             if (entry.getTag().equals(FieldTag.ExifIfdPointer)) {
-                exif = new ImageFileDirectory(b, entry.getValueLong(),
+                exif = new ImageFileDirectory(b, entry.getValueLong().toInt(),
                         byteOrder);
             } else if (entry.getTag().equals(FieldTag.GpsInfoIfdPointer)) {
-                gps = new ImageFileDirectory(b, entry.getValueLong(),
+                gps = new ImageFileDirectory(b, entry.getValueLong().toInt(),
                         byteOrder);
             }
         }
@@ -89,7 +89,43 @@ class ImageFileDirectory implements ReadableByteChannel {
         dst.putShort((short) directoryEntries.size());
         bytes += java.lang.Short.BYTES;
         for (final DirectoryEntry entry : directoryEntries) {
-            bytes += entry.read(dst);
+            dst.putShort(entry.getTag().getTag());
+            bytes += java.lang.Short.BYTES;
+            dst.putShort(entry.getType().getType());
+            bytes += java.lang.Short.BYTES;
+            dst.putShort(entry.getCount());
+            bytes += java.lang.Short.BYTES;
+            if (entry.getCount()
+                    * entry.getType().getLength() <= Integer.BYTES) {
+                // value directly in the entry
+                for (short i = 0; i < entry.getCount(); i++) {
+                    switch (entry.getType()) {
+                    case BYTE:
+                        dst.put(entry.getValueByte().getValue());
+                        break;
+                    default:
+                        throw new IllegalStateException(
+                                "unsupported data type " + entry.getType());
+                    }
+                    bytes += entry.getType().getLength();
+                }
+                // padding
+                for (int i = entry.getCount()
+                        * entry.getType().getLength(); i < Integer.BYTES; i++) {
+                    dst.put((byte) 0);
+                    bytes += java.lang.Byte.BYTES;
+                }
+            } else {
+                // offset
+                throw new UnsupportedOperationException("not implemented yet");
+            }
+            bytes += Integer.BYTES;
+        }
+        if (exif != null) {
+            bytes += exif.read(dst);
+        }
+        if (gps != null) {
+            bytes += gps.read(dst);
         }
         dst.putInt(nextIfdOffset);
         bytes += Integer.BYTES;
@@ -120,7 +156,11 @@ class ImageFileDirectory implements ReadableByteChannel {
     int getLength() {
         int length = 0;
         for (final DirectoryEntry e : directoryEntries) {
-            length += e.getLength();
+            length += DirectoryEntry.BYTES;
+            if (e.getCount() * e.getType().getLength() > Integer.BYTES) {
+                // actual value is offset
+                length += e.getCount() * e.getType().getLength();
+            }
         }
         length += exif == null ? 0 : exif.getLength();
         length += gps == null ? 0 : gps.getLength();

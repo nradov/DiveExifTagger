@@ -3,6 +3,7 @@ package com.github.nradov.diveexiftagger.image.jpeg;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.nio.ByteOrder;
 import java.text.DecimalFormat;
 
 /**
@@ -11,10 +12,17 @@ import java.text.DecimalFormat;
  *
  * @author Nick Radov
  */
-public class Rational extends DataType {
+class Rational extends DataType {
 
     private final Long numerator;
     private final Long denominator;
+
+    public Rational(final byte[] b, final int index,
+            final ByteOrder byteOrder) {
+        this.numerator = new Long(b, index, byteOrder);
+        this.denominator = new Long(b, index + FieldType.LONG.getLength(),
+                byteOrder);
+    }
 
     public Rational(final Long numerator, final Long denominator) {
         this.numerator = numerator;
@@ -75,6 +83,16 @@ public class Rational extends DataType {
         final BigDecimal denBD = denominator.toBigDecimal();
         final int scale = Math.min(numBD.precision(), denBD.precision());
         return numBD.divide(denBD, scale, roundingMode);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @return 8
+     */
+    @Override
+    int getLength() {
+        return FieldType.RATIONAL.getLength();
     }
 
 }

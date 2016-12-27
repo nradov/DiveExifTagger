@@ -29,15 +29,14 @@ class ApplicationSpecific1 extends VariableLengthSegment {
         return MARKER;
     }
 
-    @Override
-    void populate(final SeekableByteChannel channel)
+    ApplicationSpecific1(final SeekableByteChannel channel)
             throws IOException, XMPException {
         final ByteBuffer dst = ByteBuffer.allocate(java.lang.Short.BYTES);
         if (channel.read(dst) != dst.capacity()) {
             throw new IOException("no length");
         }
         dst.flip();
-        final short length = dst.getShort();
+        final int length = java.lang.Short.toUnsignedInt(dst.getShort());
         if (length > java.lang.Short.BYTES) {
             final ByteBuffer body = ByteBuffer
                     .allocate(length - dst.capacity());

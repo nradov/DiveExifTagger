@@ -1,5 +1,8 @@
 package com.github.nradov.diveexiftagger.image.jpeg;
 
+import java.io.IOException;
+import java.nio.channels.SeekableByteChannel;
+
 /**
  * Start Of Frame (Baseline DCT).
  *
@@ -9,8 +12,8 @@ class StartOfFrameBaseline extends ImmutableByteSegment {
 
     static final short MARKER = (short) 0xFFC0;
 
-    StartOfFrameBaseline() {
-
+    StartOfFrameBaseline(final SeekableByteChannel channel) throws IOException {
+        super(channel);
     }
 
     @Override

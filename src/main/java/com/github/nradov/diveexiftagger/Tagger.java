@@ -118,6 +118,7 @@ public class Tagger {
      * @see <a target="_" title="Aware Systems" href=
      *      "http://www.awaresystems.be/imaging/tiff/tifftags/privateifd/exif/datetimeoriginal.html">
      *      TIFF Tag DateTimeOriginal</a>
+     * @return the converted point in time
      */
     public static Instant convertExifDateTime(final String dateTime) {
         if (dateTime == null) {

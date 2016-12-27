@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 import com.adobe.internal.xmp.XMPException;
 
@@ -30,27 +29,23 @@ public class JpegExif {
      */
     // TODO:
     // http://minborgsjavapot.blogspot.com/2014/12/java-8-initializing-maps-in-smartest-way.html
-    private static final Map<java.lang.Short, Supplier<? extends Segment>> SEGMENT_MARKER_CTOR_MAP = Collections
-            .unmodifiableMap(
-                    new HashMap<java.lang.Short, Supplier<? extends Segment>>() {
-                        {
-                            put(StartOfImage.MARKER, StartOfImage::new);
-                            put(ApplicationSpecific1.MARKER,
-                                    ApplicationSpecific1::new);
-                            put(DefineQuantizationTable.MARKER,
-                                    DefineQuantizationTable::new);
-                            put(StartOfFrameBaseline.MARKER,
-                                    StartOfFrameBaseline::new);
-                            put(StartOfFrameProgressive.MARKER,
-                                    StartOfFrameProgressive::new);
-                            put(DefineHuffmanTable.MARKER,
-                                    DefineHuffmanTable::new);
-                            put(StartOfScan.MARKER, StartOfScan::new);
-                            put(EndOfImage.MARKER, EndOfImage::new);
-                            put(DefineRestartInterval.MARKER,
-                                    DefineRestartInterval::new);
-                        }
-                    });
+    private static final Map<java.lang.Short, SegmentSupplier> SEGMENT_MARKER_CTOR_MAP = Collections
+            .unmodifiableMap(new HashMap<java.lang.Short, SegmentSupplier>() {
+                {
+                    put(StartOfImage.MARKER, StartOfImage::new);
+                    put(ApplicationSpecific1.MARKER, ApplicationSpecific1::new);
+                    put(DefineQuantizationTable.MARKER,
+                            DefineQuantizationTable::new);
+                    put(StartOfFrameBaseline.MARKER, StartOfFrameBaseline::new);
+                    put(StartOfFrameProgressive.MARKER,
+                            StartOfFrameProgressive::new);
+                    put(DefineHuffmanTable.MARKER, DefineHuffmanTable::new);
+                    put(StartOfScan.MARKER, StartOfScan::new);
+                    put(EndOfImage.MARKER, EndOfImage::new);
+                    put(DefineRestartInterval.MARKER,
+                            DefineRestartInterval::new);
+                }
+            });
 
     public JpegExif(final String path) throws IOException, XMPException {
         this(Paths.get(path));
@@ -71,10 +66,8 @@ public class JpegExif {
             dst.flip();
             final short marker = dst.getShort();
             if (SEGMENT_MARKER_CTOR_MAP.containsKey(marker)) {
-                final Segment segment = SEGMENT_MARKER_CTOR_MAP.get(marker)
-                        .get();
-                segment.populate(channel);
-                segments.add(segment);
+                segments.add(
+                        SEGMENT_MARKER_CTOR_MAP.get(marker).construct(channel));
             } else {
                 throw new IllegalArgumentException("unexpected marker: "
                         + formatShortAsUnsignedHex(marker));

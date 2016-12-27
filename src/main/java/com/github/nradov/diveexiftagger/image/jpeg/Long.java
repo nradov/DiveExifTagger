@@ -2,17 +2,18 @@ package com.github.nradov.diveexiftagger.image.jpeg;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.ByteOrder;
 
 /**
  * 32-bit (4-byte) unsigned integer.
  *
  * @author Nick Radov
  */
-public class Long extends DataType {
+class Long extends DataType {
 
     private final int value;
 
-    public static final Long ONE = new Long(1);
+    static final Long ONE = new Long(1);
 
     /**
      * Create a new {@code Long}.
@@ -38,17 +39,30 @@ public class Long extends DataType {
         this.value = value.intValue();
     }
 
-    public BigInteger toBigInteger() {
+    Long(final byte[] array, final int offset, final ByteOrder byteOrder) {
+        value = Utilities.convertToInt(array, offset, byteOrder);
+    }
+
+    BigInteger toBigInteger() {
         return BigInteger.valueOf(Integer.toUnsignedLong(value));
     }
 
-    public BigDecimal toBigDecimal() {
+    BigDecimal toBigDecimal() {
         return new BigDecimal(toBigInteger());
+    }
+
+    int toInt() {
+        return value;
     }
 
     @Override
     public String toString() {
         return Integer.toUnsignedString(value);
+    }
+
+    @Override
+    int getLength() {
+        return FieldType.LONG.getLength();
     }
 
 }

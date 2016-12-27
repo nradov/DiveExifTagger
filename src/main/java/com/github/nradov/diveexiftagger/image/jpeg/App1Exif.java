@@ -50,9 +50,22 @@ class App1Exif extends App1Contents {
             throw new IllegalArgumentException(
                     "unexpected version number: " + versionNumber);
         }
-        final int offsetOfIfd = convertToInt(content, index, this.byteOrder);
+        final int offsetOfIfd0 = convertToInt(content, index, this.byteOrder);
         index += Integer.BYTES;
-        ifds.add(new ImageFileDirectory(content, offsetOfIfd, this.byteOrder));
+        final ImageFileDirectory ifd0 = new ImageFileDirectory(content,
+                offsetOfIfd0, this.byteOrder);
+        index += ifd0.getLength();
+        ifds.add(ifd0);
+        final int offsetOfIfd1 = convertToInt(content, index, this.byteOrder);
+        index += Integer.BYTES;
+        final ImageFileDirectory ifd1 = new ImageFileDirectory(content,
+                offsetOfIfd1, this.byteOrder);
+        index += ifd1.getLength();
+        ifds.add(ifd1);
+        if (index != content.length) {
+            throw new IllegalStateException(
+                    "expected " + content.length + " bytes but read " + index);
+        }
     }
 
     ByteOrder getByteOrder() {
@@ -94,7 +107,15 @@ class App1Exif extends App1Contents {
 
     @Override
     int getLength() {
-        int length = EXIF.length + ByteOrderConstants.LITTLE_ENDIAN.length();
+        int length =
+                // Exif marker
+                EXIF.length
+                        // byte order
+                        + ByteOrderConstants.LITTLE_ENDIAN.length()
+                        // version
+                        + java.lang.Short.BYTES
+                        // offset of IFD
+                        + java.lang.Integer.BYTES;
         for (final ImageFileDirectory dir : ifds) {
             length += dir.getLength();
         }

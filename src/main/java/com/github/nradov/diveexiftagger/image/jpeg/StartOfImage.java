@@ -1,5 +1,7 @@
 package com.github.nradov.diveexiftagger.image.jpeg;
 
+import java.nio.channels.SeekableByteChannel;
+
 /**
  * Start of image.
  *
@@ -9,7 +11,7 @@ class StartOfImage extends NoPayloadSegment {
 
     static final short MARKER = (short) 0xFFD8;
 
-    StartOfImage() {
+    StartOfImage(final SeekableByteChannel channel) {
     }
 
     @Override

@@ -71,6 +71,9 @@ public final class DiveSourceFactory {
      *
      * @param file
      *            dive profiles
+     * @param zoneOffset
+     *            time zone offset for the logged data; this is typically not
+     *            present in most data files and has to be specified separately
      * @return source of zero or more dive profiles
      * @throws ZipException
      *             if an error occurs while reading a compressed dive log file

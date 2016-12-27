@@ -3,11 +3,8 @@ package com.github.nradov.diveexiftagger.image.jpeg;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
-import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
-
-import com.adobe.internal.xmp.XMPException;
 
 abstract class Segment implements ReadableByteChannel {
 
@@ -24,9 +21,6 @@ abstract class Segment implements ReadableByteChannel {
      * @return marker which starts this segment
      */
     abstract short getMarker();
-
-    abstract void populate(final SeekableByteChannel channel)
-            throws IOException, XMPException;
 
     @Override
     public boolean isOpen() {

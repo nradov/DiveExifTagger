@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 /**
- * Diver demographics, Dive profile & Dive log details.
+ * Diver demographics, Dive profile &amp; Dive log details.
  *
  * @author Nick Radov
  */

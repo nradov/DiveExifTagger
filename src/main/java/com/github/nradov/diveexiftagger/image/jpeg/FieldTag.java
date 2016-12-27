@@ -19,9 +19,11 @@ import java.util.Set;
  * All supported metadata field tags.
  *
  * @author Nick Radov
- * @see <a target="_" href=
- *      "http://www.sno.phy.queensu.ca/~phil/exiftool/TagNames/EXIF.html" title=
- *      "ExifTool by Phil Harvey">EXIF Tags</a>
+ * @see <a title="ExifTool by Phil Harvey" target="_" href=
+ *      "http://www.sno.phy.queensu.ca/~phil/exiftool/TagNames/EXIF.html">EXIF
+ *      Tags</a>
+ * @see <a title="Exiv2" target="_" href="http://www.exiv2.org/tags.html">
+ *      Metadata reference tables</a>
  */
 public enum FieldTag {
 
@@ -114,7 +116,7 @@ public enum FieldTag {
      * Copyright notice of the person or organization that claims the copyright
      * to the image. The complete copyright statement should be listed in this
      * field including any dates and statements of claims. For example,
-     * “Copyright, John Smith, 19xx. All rights reserved.”
+     * "Copyright, John Smith, 19xx. All rights reserved."
      * </p>
      */
     Copyright(33432, ASCII),
@@ -129,7 +131,7 @@ public enum FieldTag {
     /**
      * Date and time of image creation.
      * <p>
-     * The format is: “YYYY:MM:DD HH:MM:SS”, with hours like those on a 24-hour
+     * The format is: "YYYY:MM:DD HH:MM:SS", with hours like those on a 24-hour
      * clock, and one space character between the date and the time. The length
      * of the string, including the terminating NUL, is 20 bytes.
      * </p>
@@ -294,8 +296,8 @@ public enum FieldTag {
 
     /**
      * Indicates the altitude based on the reference in {@link #GpsAltitudeRef}.
-     * Altitude is expressed as one {@link TiffFieldType#RATIONAL} value. The
-     * reference unit is meters.
+     * Altitude is expressed as one {@link Rational} value. The reference unit
+     * is meters.
      */
     GpsAltitude(6, RATIONAL),
 
@@ -304,8 +306,8 @@ public enum FieldTag {
      * is sea level and the altitude is above sea level, 0 is given. If the
      * altitude is below sea level, a value of 1 is given and the altitude is
      * indicated as an absolute value in the {@link #GpsAltitude} tag. The
-     * reference unit is meters. Note that this tag is
-     * {@link TiffFieldType#BYTE} type, unlike other reference tags.
+     * reference unit is meters. Note that this tag is {@link Byte} type, unlike
+     * other reference tags.
      */
     GpsAltitudeRef(5, BYTE),
 
@@ -495,8 +497,8 @@ public enum FieldTag {
 
     /**
      * Indicates the time as UTC (Coordinated Universal Time). TimeStamp is
-     * expressed as three {@link TiffFieldType#RATIONAL} values giving the hour,
-     * minute, and second.
+     * expressed as three {@link Rational} values giving the hour, minute, and
+     * second.
      */
     GpsTimeStamp(7, RATIONAL),
 
@@ -523,8 +525,8 @@ public enum FieldTag {
     /**
      * A string that describes the subject of the image.
      * <p>
-     * For example, a user may wish to attach a comment such as “1988 company
-     * picnic” to an image.
+     * For example, a user may wish to attach a comment such as "1988 company
+     * picnic" to an image.
      * </p>
      */
     ImageDescription(270, ASCII),
@@ -650,7 +652,6 @@ public enum FieldTag {
 
     /**
      * The orientation of the image with respect to the rows and columns.
-     * <p>
      * <ol type="1">
      * <li>The 0th row represents the visual top of the image, and the 0th
      * column represents the visual left-hand side.</li>
@@ -678,6 +679,21 @@ public enum FieldTag {
      * </p>
      */
     Orientation(274, SHORT),
+
+    /**
+     * This tag indicates the sensitivity of the camera or input device when the
+     * image was shot. More specifically, it indicates one of the following
+     * values that are parameters defined in ISO 12232: standard output
+     * sensitivity (SOS), recommended exposure index (REI), or ISO speed.
+     * Accordingly, if a tag corresponding to a parameter that is designated by
+     * a {@link SensitivityType} tag is recorded, the values of the tag and of
+     * this PhotographicSensitivity tag are the same. However, if the value is
+     * 65535 (the maximum value of SHORT) or higher, the value of this tag shall
+     * be 65535. When recording this tag, the SensitivityType tag should also be
+     * recorded. In addition, while Count = Any, only 1 count should be used
+     * when recording this tag.
+     */
+    PhotographicSensitivity(34855, SHORT),
 
     /**
      * The pixel composition. In JPEG compressed data a JPEG marker is used

@@ -5,19 +5,16 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 
 /**
- *
+ * Segment where the data is just stored as bytes instead of being parsed out
+ * and can't be manipulated.
+ * 
  * @author Nick Radov
  */
 abstract class ImmutableByteSegment extends VariableLengthSegment {
 
-    private byte[] contents;
+    private final byte[] contents;
 
-    ImmutableByteSegment() {
-
-    }
-
-    @Override
-    void populate(final SeekableByteChannel channel) throws IOException {
+    ImmutableByteSegment(final SeekableByteChannel channel) throws IOException {
         final ByteBuffer dst = ByteBuffer.allocate(java.lang.Short.BYTES);
         channel.read(dst);
         dst.flip();

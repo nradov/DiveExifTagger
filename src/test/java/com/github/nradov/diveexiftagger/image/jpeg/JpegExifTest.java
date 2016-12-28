@@ -37,7 +37,7 @@ public class JpegExifTest {
 
         jpeg.toString();
         assertEquals(0, new BigDecimal("6.1").compareTo(jpeg.getGpsAltitude()
-                .get().toBigDecimal(RoundingMode.UNNECESSARY)));
+                .get().get(0).toBigDecimal(RoundingMode.UNNECESSARY)));
         final Path temp = Files.createTempFile(null, null);
         jpeg.write(temp);
 

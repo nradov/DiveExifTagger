@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import com.adobe.internal.xmp.XMPException;
@@ -48,7 +49,7 @@ class App1Xmp extends App1Contents {
     }
 
     @Override
-    public Optional<Rational> getFieldRational(final FieldTag tag) {
+    public Optional<List<Rational>> getFieldRational(final FieldTag tag) {
         // TODO: look for tag
         return Optional.empty();
     }

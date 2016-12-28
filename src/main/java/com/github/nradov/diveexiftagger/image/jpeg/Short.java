@@ -11,9 +11,12 @@ class Short extends DataType {
 
     private final short value;
 
-    public Short(final byte[] b, final int newIndex,
-            final ByteOrder byteOrder) {
+    Short(final byte[] b, final int newIndex, final ByteOrder byteOrder) {
         value = Utilities.convertToShort(b, newIndex, byteOrder);
+    }
+
+    short getValue() {
+        return value;
     }
 
     /**
@@ -24,6 +27,11 @@ class Short extends DataType {
     @Override
     int getLength() {
         return FieldType.SHORT.getLength();
+    }
+
+    @Override
+    public String toString() {
+        return java.lang.Long.toUnsignedString(value);
     }
 
 }

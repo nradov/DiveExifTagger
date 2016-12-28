@@ -90,9 +90,9 @@ public class JpegExif {
         }
     }
 
-    public Optional<Rational> getFieldRational(final FieldTag tag) {
+    public Optional<List<Rational>> getFieldRational(final FieldTag tag) {
         for (final Segment segment : getSegments()) {
-            final Optional<Rational> o = segment.getFieldRational(tag);
+            final Optional<List<Rational>> o = segment.getFieldRational(tag);
             if (o.isPresent()) {
                 return o;
             }
@@ -100,7 +100,7 @@ public class JpegExif {
         return Optional.empty();
     }
 
-    public Optional<Rational> getGpsAltitude() {
+    public Optional<List<Rational>> getGpsAltitude() {
         return getFieldRational(FieldTag.GpsAltitude);
     }
 

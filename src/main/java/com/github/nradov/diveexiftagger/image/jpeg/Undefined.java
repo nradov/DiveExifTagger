@@ -25,4 +25,9 @@ class Undefined extends DataType {
         return FieldType.UNDEFINED.getLength();
     }
 
+    @Override
+    public String toString() {
+        return java.lang.Long.toUnsignedString(value);
+    }
+
 }

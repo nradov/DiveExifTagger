@@ -126,7 +126,7 @@ enum FieldType {
     /**
      * Get a method reference to the constructor for the value class
      * corresponding to this data type.
-     * 
+     *
      * @return constructor reference
      */
     DataTypeSupplier getSupplier() {

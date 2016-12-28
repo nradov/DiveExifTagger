@@ -23,10 +23,12 @@ import java.util.Map;
  */
 class DirectoryEntry {
 
+    /**
+     * Number of bytes in a directory entry field, not counting the offset value
+     * (if any).
+     */
     static final int BYTES = 12;
 
-    private final byte[] tiff;
-    private final ByteOrder byteOrder;
     private final FieldTag tag;
     private final FieldType type;
     private final List<DataType> value;
@@ -44,8 +46,6 @@ class DirectoryEntry {
 
     DirectoryEntry(final byte[] tiff, final int index,
             final ByteOrder byteOrder) {
-        this.tiff = tiff;
-        this.byteOrder = byteOrder;
         int newIndex = index;
         tag = FieldTag.valueOf(convertToShort(tiff, newIndex, byteOrder));
         newIndex += java.lang.Short.BYTES;
@@ -106,50 +106,68 @@ class DirectoryEntry {
         return (short) value.size();
     }
 
-    List<? extends DataType> getValue() {
+    List<? super DataType> getValue() {
         return value;
     }
 
-    Ascii getValueAscii() {
-        return getFirstValue(FieldType.ASCII);
+    List<Ascii> getValueAscii() {
+        return getValue(FieldType.ASCII);
     }
 
-    Byte getValueByte() {
-        return getFirstValue(FieldType.BYTE);
+    List<Byte> getValueByte() {
+        return getValue(FieldType.BYTE);
     }
 
-    Short getValueShort() {
-        return getFirstValue(FieldType.SHORT);
+    List<Short> getValueShort() {
+        return getValue(FieldType.SHORT);
     }
 
-    Long getValueLong() {
-        return getFirstValue(FieldType.LONG);
+    List<Long> getValueLong() {
+        return getValue(FieldType.LONG);
     }
 
-    Undefined getValueUndefined() {
-        return getFirstValue(FieldType.UNDEFINED);
+    List<Undefined> getValueUndefined() {
+        return getValue(FieldType.UNDEFINED);
     }
 
-    Rational getValueRational() {
-        return getFirstValue(FieldType.RATIONAL);
+    List<Rational> getValueRational() {
+        return getValue(FieldType.RATIONAL);
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends DataType> T getFirstValue(final FieldType expected) {
+    private <T extends DataType> List<T> getValue(final FieldType expected) {
         if (expected.equals(getType())) {
-            return (T) expected.getValueClass().cast(value.get(0));
+            return (List<T>) value;
         } else {
             throw new UnsupportedOperationException(
                     "invalid field type: " + getType());
         }
     }
 
+    @SuppressWarnings("serial")
+    private static final Map<FieldType, Object> DATA_TYPE_TOSTRING_MAP = Collections
+            .unmodifiableMap(new HashMap<FieldType, Object>() {
+                {
+                    for (final FieldType fieldType : EnumSet
+                            .allOf(FieldType.class)) {
+                        put(fieldType, fieldType.getSupplier());
+                    }
+                }
+            });
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append(getTag());
         sb.append(" = ");
-        sb.append(value);
+        switch (getType()) {
+        case ASCII:
+            sb.append(Ascii.toStringAscii(getValueAscii()));
+            break;
+        default:
+            sb.append(DataType.toString(value));
+            break;
+        }
         return sb.toString();
     }
 

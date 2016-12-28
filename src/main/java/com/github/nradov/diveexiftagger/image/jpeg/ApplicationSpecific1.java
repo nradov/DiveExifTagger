@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import com.adobe.internal.xmp.XMPException;
@@ -83,7 +84,7 @@ class ApplicationSpecific1 extends VariableLengthSegment {
     }
 
     @Override
-    public Optional<Rational> getFieldRational(final FieldTag tag) {
+    public Optional<List<Rational>> getFieldRational(final FieldTag tag) {
         return contents.getFieldRational(tag);
     }
 

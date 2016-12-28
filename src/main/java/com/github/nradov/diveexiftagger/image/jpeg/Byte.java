@@ -1,7 +1,6 @@
 package com.github.nradov.diveexiftagger.image.jpeg;
 
 import java.nio.ByteOrder;
-import java.nio.charset.StandardCharsets;
 
 /**
  * An 8-bit unsigned integer.
@@ -22,7 +21,7 @@ class Byte extends DataType {
 
     @Override
     public String toString() {
-        return new String(new byte[] { value }, StandardCharsets.ISO_8859_1);
+        return java.lang.Long.toUnsignedString(value);
     }
 
     /**

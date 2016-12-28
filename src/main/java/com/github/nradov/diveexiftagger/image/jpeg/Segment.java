@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Optional;
 
 abstract class Segment implements ReadableByteChannel {
@@ -42,7 +43,7 @@ abstract class Segment implements ReadableByteChannel {
         return Optional.empty();
     }
 
-    public Optional<Rational> getFieldRational(final FieldTag tag) {
+    public Optional<List<Rational>> getFieldRational(final FieldTag tag) {
         return Optional.empty();
     }
 

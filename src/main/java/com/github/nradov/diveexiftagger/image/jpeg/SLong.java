@@ -2,12 +2,21 @@ package com.github.nradov.diveexiftagger.image.jpeg;
 
 import java.nio.ByteOrder;
 
+/**
+ * A 32-bit (4-byte) signed integer (2's complement notation).
+ *
+ * @author Nick Radov
+ */
 class SLong extends DataType {
 
     private final int value;
 
     SLong(final byte[] array, final int offset, final ByteOrder byteOrder) {
         value = Utilities.convertToInt(array, offset, byteOrder);
+    }
+
+    int getValue() {
+        return value;
     }
 
     /**
@@ -18,6 +27,11 @@ class SLong extends DataType {
     @Override
     int getLength() {
         return FieldType.SLONG.getLength();
+    }
+
+    @Override
+    public String toString() {
+        return Integer.toString(value);
     }
 
 }

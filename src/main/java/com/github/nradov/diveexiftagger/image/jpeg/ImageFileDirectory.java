@@ -29,21 +29,22 @@ class ImageFileDirectory implements ReadableByteChannel {
         int index = offset;
         final short numberOfDirectoryEntries = convertToShort(b, index,
                 byteOrder);
+        index += java.lang.Short.BYTES;
         directoryEntries = new ArrayList<>(numberOfDirectoryEntries);
-        for (index += 2; directoryEntries
-                .size() < numberOfDirectoryEntries; index += DirectoryEntry.BYTES) {
+        while (directoryEntries.size() < numberOfDirectoryEntries) {
             final DirectoryEntry entry = new DirectoryEntry(b, index,
                     byteOrder);
+            index += DirectoryEntry.BYTES;
             directoryEntries.add(entry);
         }
         nextIfdOffset = convertToInt(b, index, byteOrder);
         for (final DirectoryEntry entry : directoryEntries) {
             if (entry.getTag().equals(FieldTag.ExifIfdPointer)) {
-                exif = new ImageFileDirectory(b, entry.getValueLong().toInt(),
-                        byteOrder);
+                exif = new ImageFileDirectory(b,
+                        entry.getValueLong().get(0).toInt(), byteOrder);
             } else if (entry.getTag().equals(FieldTag.GpsInfoIfdPointer)) {
-                gps = new ImageFileDirectory(b, entry.getValueLong().toInt(),
-                        byteOrder);
+                gps = new ImageFileDirectory(b,
+                        entry.getValueLong().get(0).toInt(), byteOrder);
             }
         }
     }
@@ -101,7 +102,7 @@ class ImageFileDirectory implements ReadableByteChannel {
                 for (short i = 0; i < entry.getCount(); i++) {
                     switch (entry.getType()) {
                     case BYTE:
-                        dst.put(entry.getValueByte().getValue());
+                        dst.put(entry.getValueByte().get(i).getValue());
                         break;
                     default:
                         throw new IllegalStateException(
@@ -132,20 +133,21 @@ class ImageFileDirectory implements ReadableByteChannel {
         return bytes;
     }
 
-    public Optional<Rational> getFieldRational(final FieldTag tag) {
+    public Optional<List<Rational>> getFieldRational(final FieldTag tag) {
         for (final DirectoryEntry entry : directoryEntries) {
             if (entry.getTag().equals(tag)) {
                 return Optional.of(entry.getValueRational());
             }
         }
         if (exif != null) {
-            final Optional<Rational> exifValue = exif.getFieldRational(tag);
+            final Optional<List<Rational>> exifValue = exif
+                    .getFieldRational(tag);
             if (exifValue.isPresent()) {
                 return exifValue;
             }
         }
         if (gps != null) {
-            final Optional<Rational> gpsValue = gps.getFieldRational(tag);
+            final Optional<List<Rational>> gpsValue = gps.getFieldRational(tag);
             if (gpsValue.isPresent()) {
                 return gpsValue;
             }

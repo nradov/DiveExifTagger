@@ -95,9 +95,9 @@ class App1Exif extends App1Contents {
     }
 
     @Override
-    public Optional<Rational> getFieldRational(final FieldTag tag) {
+    public Optional<List<Rational>> getFieldRational(final FieldTag tag) {
         for (final ImageFileDirectory ifd : ifds) {
-            final Optional<Rational> o = ifd.getFieldRational(tag);
+            final Optional<List<Rational>> o = ifd.getFieldRational(tag);
             if (o.isPresent()) {
                 return o;
             }

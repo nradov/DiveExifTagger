@@ -2,6 +2,7 @@ package com.github.nradov.diveexiftagger.image.jpeg;
 
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 /**
  * An 8-bit byte containing one 7-bit ASCII code. The final byte is terminated
@@ -18,9 +19,23 @@ class Ascii extends DataType {
                 .charAt(0);
     }
 
+    char getValue() {
+        return value;
+    }
+
     @Override
     public String toString() {
         return Character.toString(value);
+    }
+
+    static String toStringAscii(final List<Ascii> l) {
+        final StringBuilder sb = new StringBuilder(l.size() + 2);
+        sb.append('"');
+        for (final Ascii a : l) {
+            sb.append(a.getValue());
+        }
+        sb.append('"');
+        return sb.toString();
     }
 
     @Override

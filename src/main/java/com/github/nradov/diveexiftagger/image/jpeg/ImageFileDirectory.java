@@ -12,12 +12,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import javax.annotation.Nonnull;
+
 /**
  * TIFF image file directory (IFD).
  *
  * @author Nick Radov
  */
-class ImageFileDirectory implements ReadableByteChannel {
+class ImageFileDirectory implements ReadableByteChannel, ContainsField {
 
     private final List<DirectoryEntry> directoryEntries;
     private ImageFileDirectory exif;
@@ -50,35 +52,71 @@ class ImageFileDirectory implements ReadableByteChannel {
     }
 
     @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder();
-        for (final DirectoryEntry field : getDirectoryEntries()) {
-            sb.append(field);
-            sb.append(Utilities.LINE_SEPARATOR);
-        }
-        return sb.toString();
-    }
-
-    short getNumberOfDirectoryEntries() {
-        return (short) directoryEntries.size();
+    public void close() throws IOException {
+        // do nothing
     }
 
     List<DirectoryEntry> getDirectoryEntries() {
         return Collections.unmodifiableList(directoryEntries);
     }
 
+    @Override
+    @Nonnull
+    public <T extends DataType> Optional<List<T>> getField(
+            @Nonnull final FieldTag tag, @Nonnull final Class<T> clazz) {
+        for (final DirectoryEntry entry : directoryEntries) {
+            if (entry.getTag().equals(tag)) {
+                return Optional.of(entry.getValue(clazz));
+            }
+        }
+        if (exif != null) {
+            final Optional<List<T>> exifValue = exif.getField(tag, clazz);
+            if (exifValue.isPresent()) {
+                return exifValue;
+            }
+        }
+        if (gps != null) {
+            final Optional<List<T>> gpsValue = gps.getField(tag, clazz);
+            if (gpsValue.isPresent()) {
+                return gpsValue;
+            }
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    @Nonnull
+    public Optional<List<Rational>> getFieldRational(
+            final @Nonnull FieldTag tag) {
+        return getField(tag, Rational.class);
+    }
+
+    int getLength() {
+        int length = 0;
+        for (final DirectoryEntry e : directoryEntries) {
+            length += DirectoryEntry.BYTES;
+            if (e.getCount() * e.getType().getLength() > Integer.BYTES) {
+                // actual value is offset
+                length += e.getCount() * e.getType().getLength();
+            }
+        }
+        length += exif == null ? 0 : exif.getLength();
+        length += gps == null ? 0 : gps.getLength();
+        length += Integer.BYTES;
+        return length;
+    }
+
     int getNextIfdOffset() {
         return nextIfdOffset;
+    }
+
+    short getNumberOfDirectoryEntries() {
+        return (short) directoryEntries.size();
     }
 
     @Override
     public boolean isOpen() {
         return true;
-    }
-
-    @Override
-    public void close() throws IOException {
-        // do nothing
     }
 
     @Override
@@ -133,41 +171,14 @@ class ImageFileDirectory implements ReadableByteChannel {
         return bytes;
     }
 
-    public Optional<List<Rational>> getFieldRational(final FieldTag tag) {
-        for (final DirectoryEntry entry : directoryEntries) {
-            if (entry.getTag().equals(tag)) {
-                return Optional.of(entry.getValueRational());
-            }
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        for (final DirectoryEntry field : getDirectoryEntries()) {
+            sb.append(field);
+            sb.append(Utilities.LINE_SEPARATOR);
         }
-        if (exif != null) {
-            final Optional<List<Rational>> exifValue = exif
-                    .getFieldRational(tag);
-            if (exifValue.isPresent()) {
-                return exifValue;
-            }
-        }
-        if (gps != null) {
-            final Optional<List<Rational>> gpsValue = gps.getFieldRational(tag);
-            if (gpsValue.isPresent()) {
-                return gpsValue;
-            }
-        }
-        return Optional.empty();
-    }
-
-    int getLength() {
-        int length = 0;
-        for (final DirectoryEntry e : directoryEntries) {
-            length += DirectoryEntry.BYTES;
-            if (e.getCount() * e.getType().getLength() > Integer.BYTES) {
-                // actual value is offset
-                length += e.getCount() * e.getType().getLength();
-            }
-        }
-        length += exif == null ? 0 : exif.getLength();
-        length += gps == null ? 0 : gps.getLength();
-        length += Integer.BYTES;
-        return length;
+        return sb.toString();
     }
 
 }

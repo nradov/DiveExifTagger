@@ -78,11 +78,22 @@ public class JpegExif implements ContainsField {
         this(Paths.get(path));
     }
 
+    public <T extends DataType> Optional<List<T>> getField(
+            @Nonnull final FieldTag tag, final Class<T> clazz) {
+        for (final ContainsField segment : getSegments()) {
+            final Optional<List<T>> o = segment.getField(tag, clazz);
+            if (o.isPresent()) {
+                return o;
+            }
+        }
+        return Optional.empty();
+    }
+
     @Override
     @Nonnull
     public Optional<List<Rational>> getFieldRational(
             @Nonnull final FieldTag tag) {
-        for (final Segment segment : getSegments()) {
+        for (final ContainsField segment : getSegments()) {
             final Optional<List<Rational>> o = segment.getFieldRational(tag);
             if (o.isPresent()) {
                 return o;

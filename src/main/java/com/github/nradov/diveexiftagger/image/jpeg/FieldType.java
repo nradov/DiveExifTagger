@@ -64,46 +64,6 @@ enum FieldType {
     /** Double precision (8-byte) IEEE format. */
     DOUBLE(12, java.lang.Double.BYTES, Double.class, Double::new);
 
-    private final short type;
-    private final int length;
-    private final Class<? extends DataType> valueClass;
-    private final DataTypeSupplier supplier;
-
-    /*
-     * TODO: It seems like there should be a way to derive the DataTypeSupplier
-     * object from the Class object but I can't figure out the right syntax.
-     */
-    private FieldType(final int type, final int length,
-            final Class<? extends DataType> valueClass,
-            final DataTypeSupplier supplier) {
-        this.type = (short) type;
-        this.length = length;
-        this.valueClass = valueClass;
-        this.supplier = supplier;
-    }
-
-    /**
-     * Get the numeric directory entry type indicator.
-     *
-     * @return 1 &ndash; 10
-     */
-    short getType() {
-        return type;
-    }
-
-    /**
-     * Get the number of bytes per value.
-     *
-     * @return count of bytes in a single value of this data type
-     */
-    int getLength() {
-        return length;
-    }
-
-    Class<? extends DataType> getValueClass() {
-        return valueClass;
-    }
-
     @SuppressWarnings("serial")
     private static final Map<java.lang.Short, FieldType> MAP = Collections
             .unmodifiableMap(new HashMap<java.lang.Short, FieldType>() {
@@ -123,6 +83,35 @@ enum FieldType {
         }
     }
 
+    private final short type;
+    private final int length;
+
+    private final Class<? extends DataType> valueClass;
+
+    private final DataTypeSupplier supplier;
+
+    /*
+     * TODO: It seems like there should be a way to derive the DataTypeSupplier
+     * object from the Class object but I can't figure out the right syntax.
+     */
+    private FieldType(final int type, final int length,
+            final Class<? extends DataType> valueClass,
+            final DataTypeSupplier supplier) {
+        this.type = (short) type;
+        this.length = length;
+        this.valueClass = valueClass;
+        this.supplier = supplier;
+    }
+
+    /**
+     * Get the number of bytes per value.
+     *
+     * @return count of bytes in a single value of this data type
+     */
+    int getLength() {
+        return length;
+    }
+
     /**
      * Get a method reference to the constructor for the value class
      * corresponding to this data type.
@@ -131,6 +120,19 @@ enum FieldType {
      */
     DataTypeSupplier getSupplier() {
         return supplier;
+    }
+
+    /**
+     * Get the numeric directory entry type indicator.
+     *
+     * @return 1 &ndash; 10
+     */
+    short getType() {
+        return type;
+    }
+
+    Class<? extends DataType> getValueClass() {
+        return valueClass;
     }
 
 }

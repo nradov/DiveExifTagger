@@ -7,7 +7,27 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
-abstract class Segment implements ReadableByteChannel {
+import javax.annotation.Nonnull;
+
+abstract class Segment implements ReadableByteChannel, ContainsField {
+
+    @Override
+    public void close() throws IOException {
+        // nothing to do
+    }
+
+    @Override
+    @Nonnull
+    public <T extends DataType> Optional<List<T>> getField(final FieldTag tag,
+            final Class<T> clazz) {
+        return Optional.empty();
+    }
+
+    @Override
+    @Nonnull
+    public Optional<List<Rational>> getFieldRational(final FieldTag tag) {
+        return getField(tag, Rational.class);
+    }
 
     /**
      * Get the length of this segment in bytes, including the 2-byte marker.
@@ -29,22 +49,9 @@ abstract class Segment implements ReadableByteChannel {
     }
 
     @Override
-    public void close() throws IOException {
-        // nothing to do
-    }
-
-    @Override
     public int read(final ByteBuffer dst) throws IOException {
         dst.putShort(getMarker());
         return java.lang.Short.BYTES;
-    }
-
-    public Optional<? extends DataType> getField(final FieldTag tag) {
-        return Optional.empty();
-    }
-
-    public Optional<List<Rational>> getFieldRational(final FieldTag tag) {
-        return Optional.empty();
     }
 
     @Override

@@ -11,9 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-class App1Exif extends App1Contents {
+import javax.annotation.Nonnull;
 
-    static final byte[] EXIF = { 'E', 'x', 'i', 'f', 0, 0 };
+class App1Exif extends App1Contents {
 
     private static final class ByteOrderConstants {
 
@@ -21,6 +21,8 @@ class App1Exif extends App1Contents {
         private static final String BIG_ENDIAN = "MM";
 
     }
+
+    static final byte[] EXIF = { 'E', 'x', 'i', 'f', 0, 0 };
 
     private static final short VERSION_NUMBER = 42;
 
@@ -73,31 +75,11 @@ class App1Exif extends App1Contents {
     }
 
     @Override
-    public int read(final ByteBuffer dst) throws IOException {
-        int bytes = 0;
-        dst.put(EXIF);
-        bytes += EXIF.length;
-        final String byteOrderString;
-        if (ByteOrder.LITTLE_ENDIAN.equals(byteOrder)) {
-            byteOrderString = ByteOrderConstants.LITTLE_ENDIAN;
-        } else if (ByteOrder.BIG_ENDIAN.equals(byteOrder)) {
-            byteOrderString = ByteOrderConstants.BIG_ENDIAN;
-        } else {
-            throw new IllegalStateException(
-                    "unexpected byte order: " + byteOrder);
-        }
-        dst.put(byteOrderString.getBytes(StandardCharsets.US_ASCII));
-        bytes += byteOrderString.length();
-        for (final ImageFileDirectory dir : ifds) {
-            bytes += dir.read(dst);
-        }
-        return bytes;
-    }
-
-    @Override
-    public Optional<List<Rational>> getFieldRational(final FieldTag tag) {
-        for (final ImageFileDirectory ifd : ifds) {
-            final Optional<List<Rational>> o = ifd.getFieldRational(tag);
+    @Nonnull
+    public <T extends DataType> Optional<List<T>> getField(
+            @Nonnull final FieldTag tag, @Nonnull final Class<T> clazz) {
+        for (final ContainsField ifd : ifds) {
+            final Optional<List<T>> o = ifd.getField(tag, clazz);
             if (o.isPresent()) {
                 return o;
             }
@@ -120,6 +102,28 @@ class App1Exif extends App1Contents {
             length += dir.getLength();
         }
         return length;
+    }
+
+    @Override
+    public int read(final ByteBuffer dst) throws IOException {
+        int bytes = 0;
+        dst.put(EXIF);
+        bytes += EXIF.length;
+        final String byteOrderString;
+        if (ByteOrder.LITTLE_ENDIAN.equals(byteOrder)) {
+            byteOrderString = ByteOrderConstants.LITTLE_ENDIAN;
+        } else if (ByteOrder.BIG_ENDIAN.equals(byteOrder)) {
+            byteOrderString = ByteOrderConstants.BIG_ENDIAN;
+        } else {
+            throw new IllegalStateException(
+                    "unexpected byte order: " + byteOrder);
+        }
+        dst.put(byteOrderString.getBytes(StandardCharsets.US_ASCII));
+        bytes += byteOrderString.length();
+        for (final ImageFileDirectory dir : ifds) {
+            bytes += dir.read(dst);
+        }
+        return bytes;
     }
 
 }

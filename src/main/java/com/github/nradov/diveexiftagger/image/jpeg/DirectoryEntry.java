@@ -11,9 +11,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
+
 /**
  * Single metadata field in an {@link ImageFileDirectory}.
- * 
+ *
  * @author Nick Radov
  */
 /*
@@ -121,14 +123,21 @@ class DirectoryEntry {
         return value;
     }
 
+    @Nonnull
     @SuppressWarnings("unchecked")
-    private <T extends DataType> List<T> getValue(final FieldType expected) {
-        if (expected.equals(getType())) {
+    <T extends DataType> List<T> getValue(@Nonnull final Class<T> clazz) {
+        if (clazz.equals(getType().getValueClass())) {
             return (List<T>) value;
         } else {
             throw new UnsupportedOperationException(
                     "invalid field type: " + getType());
         }
+    }
+
+    @Nonnull
+    @SuppressWarnings("unchecked")
+    <T extends DataType> List<T> getValue(final FieldType expected) {
+        return (List<T>) getValue(expected.getValueClass());
     }
 
     List<Ascii> getValueAscii() {

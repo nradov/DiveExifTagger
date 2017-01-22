@@ -7,6 +7,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import javax.annotation.Nonnull;
+
 import com.adobe.internal.xmp.XMPException;
 import com.adobe.internal.xmp.XMPMeta;
 import com.adobe.internal.xmp.XMPMetaFactory;
@@ -34,22 +36,16 @@ class App1Xmp extends App1Contents {
 
     final XMPMeta xmp;
 
-    App1Xmp(final byte[] content) throws XMPException {
+    App1Xmp(@Nonnull final byte[] content) throws XMPException {
         xmp = XMPMetaFactory.parseFromBuffer(Arrays.copyOfRange(content,
                 XMP_IDENTIFIER.length() + 1, content.length));
         System.err.println(xmp.dumpObject());
     }
 
+    @Nonnull
     @Override
-    public int read(final ByteBuffer dst) throws IOException {
-        final byte[] bytes = xmp.toString()
-                .getBytes(StandardCharsets.ISO_8859_1);
-        dst.put(bytes);
-        return bytes.length;
-    }
-
-    @Override
-    public Optional<List<Rational>> getFieldRational(final FieldTag tag) {
+    public <T extends DataType> Optional<List<T>> getField(
+            @Nonnull final FieldTag tag, @Nonnull final Class<T> clazz) {
         // TODO: look for tag
         return Optional.empty();
     }
@@ -57,6 +53,14 @@ class App1Xmp extends App1Contents {
     @Override
     int getLength() {
         throw new UnsupportedOperationException("not implemented yet");
+    }
+
+    @Override
+    public int read(@Nonnull final ByteBuffer dst) throws IOException {
+        final byte[] bytes = xmp.toString()
+                .getBytes(StandardCharsets.ISO_8859_1);
+        dst.put(bytes);
+        return bytes.length;
     }
 
 }

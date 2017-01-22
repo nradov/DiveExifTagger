@@ -7,16 +7,12 @@ import java.nio.ByteOrder;
  *
  * @author Nick Radov
  */
-class SLong extends DataType {
+class SLong extends IntegralDataType {
 
     private final int value;
 
     SLong(final byte[] array, final int offset, final ByteOrder byteOrder) {
         value = Utilities.convertToInt(array, offset, byteOrder);
-    }
-
-    int getValue() {
-        return value;
     }
 
     /**
@@ -27,6 +23,10 @@ class SLong extends DataType {
     @Override
     int getLength() {
         return FieldType.SLONG.getLength();
+    }
+
+    int getValue() {
+        return value;
     }
 
     @Override

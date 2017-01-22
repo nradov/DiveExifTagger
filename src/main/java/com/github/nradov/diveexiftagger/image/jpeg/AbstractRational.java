@@ -2,7 +2,15 @@ package com.github.nradov.diveexiftagger.image.jpeg;
 
 import javax.annotation.Nonnull;
 
-abstract class AbstractRational<T extends DataType> extends DataType {
+/**
+ * Superclass for the concrete rational types.
+ *
+ * @author Nick Radov
+ *
+ * @param <T>
+ *            numeric type
+ */
+abstract class AbstractRational<T extends IntegralDataType> extends DataType {
 
     @Nonnull
     private final T numerator;

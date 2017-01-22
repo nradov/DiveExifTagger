@@ -16,18 +16,24 @@ import com.adobe.internal.xmp.XMPException;
  *
  * @author Nick Radov
  */
-class ApplicationSpecific1 extends VariableLengthSegment {
+class ApplicationSpecific1 extends VariableLengthSegment
+        implements ContainsField {
 
     static final short MARKER = (short) 0xFFE1;
+
+    private static boolean arrayStartsWith(final byte[] array,
+            final byte[] prefix) {
+        if (array.length >= prefix.length) {
+            final byte[] arrayStart = Arrays.copyOfRange(array, 0,
+                    prefix.length);
+            return Arrays.equals(arrayStart, prefix);
+        }
+        return false;
+    }
 
     private App1Contents contents;
 
     ApplicationSpecific1() {
-    }
-
-    @Override
-    short getMarker() {
-        return MARKER;
     }
 
     ApplicationSpecific1(final SeekableByteChannel channel)
@@ -63,14 +69,9 @@ class ApplicationSpecific1 extends VariableLengthSegment {
         }
     }
 
-    private static boolean arrayStartsWith(final byte[] array,
-            final byte[] prefix) {
-        if (array.length >= prefix.length) {
-            final byte[] arrayStart = Arrays.copyOfRange(array, 0,
-                    prefix.length);
-            return Arrays.equals(arrayStart, prefix);
-        }
-        return false;
+    @Override
+    public Optional<List<Rational>> getFieldRational(final FieldTag tag) {
+        return contents.getFieldRational(tag);
     }
 
     @Override
@@ -79,13 +80,13 @@ class ApplicationSpecific1 extends VariableLengthSegment {
     }
 
     @Override
-    public int read(final ByteBuffer dst) throws IOException {
-        return super.read(dst) + contents.read(dst);
+    short getMarker() {
+        return MARKER;
     }
 
     @Override
-    public Optional<List<Rational>> getFieldRational(final FieldTag tag) {
-        return contents.getFieldRational(tag);
+    public int read(final ByteBuffer dst) throws IOException {
+        return super.read(dst) + contents.read(dst);
     }
 
 }

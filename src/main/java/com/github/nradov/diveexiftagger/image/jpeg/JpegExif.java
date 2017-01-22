@@ -16,12 +16,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.annotation.Nonnull;
+
 import com.adobe.internal.xmp.XMPException;
 
 @SuppressWarnings("serial")
-public class JpegExif {
-
-    private final List<Segment> segments = new ArrayList<>(8);
+public class JpegExif implements ContainsField {
 
     /**
      * Map from JPEG/Exif segment markers to constructors for the corresponding
@@ -47,9 +47,7 @@ public class JpegExif {
                 }
             });
 
-    public JpegExif(final String path) throws IOException, XMPException {
-        this(Paths.get(path));
-    }
+    private final List<Segment> segments = new ArrayList<>(8);
 
     public JpegExif(final Path path) throws IOException, XMPException {
         // https://examples.javacodegeeks.com/core-java/nio/filechannel/java-nio-channels-filechannel-example/
@@ -76,21 +74,14 @@ public class JpegExif {
         }
     }
 
-    void write(final Path path) throws IOException {
-        write(FileChannel.open(path, StandardOpenOption.CREATE,
-                StandardOpenOption.APPEND));
+    public JpegExif(final String path) throws IOException, XMPException {
+        this(Paths.get(path));
     }
 
-    void write(final FileChannel channel) throws IOException {
-        long position = 0;
-        for (final Segment segment : segments) {
-            final int length = segment.getLength();
-            channel.transferFrom(segment, position, length);
-            position += length;
-        }
-    }
-
-    public Optional<List<Rational>> getFieldRational(final FieldTag tag) {
+    @Override
+    @Nonnull
+    public Optional<List<Rational>> getFieldRational(
+            @Nonnull final FieldTag tag) {
         for (final Segment segment : getSegments()) {
             final Optional<List<Rational>> o = segment.getFieldRational(tag);
             if (o.isPresent()) {
@@ -113,6 +104,20 @@ public class JpegExif {
         final StringBuilder sb = new StringBuilder();
         getSegments().forEach((k) -> sb.append(k));
         return sb.toString();
+    }
+
+    void write(final FileChannel channel) throws IOException {
+        long position = 0;
+        for (final Segment segment : segments) {
+            final int length = segment.getLength();
+            channel.transferFrom(segment, position, length);
+            position += length;
+        }
+    }
+
+    void write(final Path path) throws IOException {
+        write(FileChannel.open(path, StandardOpenOption.CREATE,
+                StandardOpenOption.APPEND));
     }
 
 }

@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Single metadata directory entry.
- *
+ * Single metadata field in an {@link ImageFileDirectory}.
+ * 
  * @author Nick Radov
  */
 /*
@@ -29,10 +29,6 @@ class DirectoryEntry {
      */
     static final int BYTES = 12;
 
-    private final FieldTag tag;
-    private final FieldType type;
-    private final List<DataType> value;
-
     @SuppressWarnings("serial")
     private static final Map<FieldType, DataTypeSupplier> DATA_TYPE_CTOR_MAP = Collections
             .unmodifiableMap(new HashMap<FieldType, DataTypeSupplier>() {
@@ -43,6 +39,21 @@ class DirectoryEntry {
                     }
                 }
             });
+    @SuppressWarnings("serial")
+    private static final Map<FieldType, Object> DATA_TYPE_TOSTRING_MAP = Collections
+            .unmodifiableMap(new HashMap<FieldType, Object>() {
+                {
+                    for (final FieldType fieldType : EnumSet
+                            .allOf(FieldType.class)) {
+                        put(fieldType, fieldType.getSupplier());
+                    }
+                }
+            });
+    private final FieldTag tag;
+
+    private final FieldType type;
+
+    private final List<DataType> value;
 
     DirectoryEntry(final byte[] tiff, final int index,
             final ByteOrder byteOrder) {
@@ -81,6 +92,17 @@ class DirectoryEntry {
     }
 
     /**
+     * Get the number of values. It should be noted carefully that the count is
+     * not the sum of the bytes. In the case of one value of SHORT (16 bits),
+     * for example, the count is '1' even though it is 2 Bytes.
+     *
+     * @return number of values
+     */
+    short getCount() {
+        return (short) value.size();
+    }
+
+    /**
      * Get the field tag. Each tag is assigned a unique 2-byte number to
      * identify the field. The tag numbers in the Exif 0th IFD and 1st IFD are
      * all the same as the TIFF tag numbers.
@@ -95,43 +117,8 @@ class DirectoryEntry {
         return type;
     }
 
-    /**
-     * Get the number of values. It should be noted carefully that the count is
-     * not the sum of the bytes. In the case of one value of SHORT (16 bits),
-     * for example, the count is '1' even though it is 2 Bytes.
-     *
-     * @return number of values
-     */
-    short getCount() {
-        return (short) value.size();
-    }
-
     List<? super DataType> getValue() {
         return value;
-    }
-
-    List<Ascii> getValueAscii() {
-        return getValue(FieldType.ASCII);
-    }
-
-    List<Byte> getValueByte() {
-        return getValue(FieldType.BYTE);
-    }
-
-    List<Short> getValueShort() {
-        return getValue(FieldType.SHORT);
-    }
-
-    List<Long> getValueLong() {
-        return getValue(FieldType.LONG);
-    }
-
-    List<Undefined> getValueUndefined() {
-        return getValue(FieldType.UNDEFINED);
-    }
-
-    List<Rational> getValueRational() {
-        return getValue(FieldType.RATIONAL);
     }
 
     @SuppressWarnings("unchecked")
@@ -144,16 +131,29 @@ class DirectoryEntry {
         }
     }
 
-    @SuppressWarnings("serial")
-    private static final Map<FieldType, Object> DATA_TYPE_TOSTRING_MAP = Collections
-            .unmodifiableMap(new HashMap<FieldType, Object>() {
-                {
-                    for (final FieldType fieldType : EnumSet
-                            .allOf(FieldType.class)) {
-                        put(fieldType, fieldType.getSupplier());
-                    }
-                }
-            });
+    List<Ascii> getValueAscii() {
+        return getValue(FieldType.ASCII);
+    }
+
+    List<Byte> getValueByte() {
+        return getValue(FieldType.BYTE);
+    }
+
+    List<Long> getValueLong() {
+        return getValue(FieldType.LONG);
+    }
+
+    List<Rational> getValueRational() {
+        return getValue(FieldType.RATIONAL);
+    }
+
+    List<Short> getValueShort() {
+        return getValue(FieldType.SHORT);
+    }
+
+    List<Undefined> getValueUndefined() {
+        return getValue(FieldType.UNDEFINED);
+    }
 
     @Override
     public String toString() {

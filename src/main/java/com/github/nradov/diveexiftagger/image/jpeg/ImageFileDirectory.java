@@ -19,7 +19,7 @@ import javax.annotation.Nonnull;
  *
  * @author Nick Radov
  */
-class ImageFileDirectory implements ReadableByteChannel, ContainsField {
+class ImageFileDirectory extends ContainsField implements ReadableByteChannel {
 
     private final List<DirectoryEntry> directoryEntries;
     private ImageFileDirectory exif;

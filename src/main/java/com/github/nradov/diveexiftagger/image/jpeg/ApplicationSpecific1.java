@@ -16,8 +16,7 @@ import com.adobe.internal.xmp.XMPException;
  *
  * @author Nick Radov
  */
-class ApplicationSpecific1 extends VariableLengthSegment
-        implements ContainsField {
+class ApplicationSpecific1 extends VariableLengthSegment {
 
     static final short MARKER = (short) 0xFFE1;
 

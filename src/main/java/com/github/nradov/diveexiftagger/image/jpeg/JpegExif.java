@@ -21,7 +21,7 @@ import javax.annotation.Nonnull;
 import com.adobe.internal.xmp.XMPException;
 
 @SuppressWarnings("serial")
-public class JpegExif implements ContainsField {
+public class JpegExif extends ContainsField {
 
     /**
      * Map from JPEG/Exif segment markers to constructors for the corresponding
@@ -78,6 +78,7 @@ public class JpegExif implements ContainsField {
         this(Paths.get(path));
     }
 
+    @Override
     public <T extends DataType> Optional<List<T>> getField(
             @Nonnull final FieldTag tag, final Class<T> clazz) {
         for (final ContainsField segment : getSegments()) {

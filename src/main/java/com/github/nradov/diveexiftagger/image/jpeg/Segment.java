@@ -9,7 +9,7 @@ import java.util.Optional;
 
 import javax.annotation.Nonnull;
 
-abstract class Segment implements ReadableByteChannel, ContainsField {
+abstract class Segment extends ContainsField implements ReadableByteChannel {
 
     @Override
     public void close() throws IOException {

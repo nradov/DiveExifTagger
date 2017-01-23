@@ -12,7 +12,8 @@ import java.util.Optional;
  *
  * @author Nick Radov
  */
-abstract class App1Contents implements ReadableByteChannel, ContainsField {
+abstract class App1Contents extends ContainsField
+        implements ReadableByteChannel {
 
     @Override
     public void close() throws IOException {

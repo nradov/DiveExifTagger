@@ -1,7 +1,4 @@
 /**
- *
- */
-/**
  * GPS track logs recorded by Canon cameras.
  *
  * @author Nick Radov

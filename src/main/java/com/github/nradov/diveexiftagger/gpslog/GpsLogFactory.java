@@ -3,8 +3,6 @@ package com.github.nradov.diveexiftagger.gpslog;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import com.github.nradov.diveexiftagger.gpslog.nautilus.NautilusLifeline;
-
 /**
  * Factory class to create a {@code GpsLogSource} based on an input file.
  *

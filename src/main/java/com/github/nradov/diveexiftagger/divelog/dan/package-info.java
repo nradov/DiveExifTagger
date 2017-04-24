@@ -2,7 +2,9 @@
  * DAN DL7 format. Some dive log software is able to export profile files in DL7
  * format so that the user can contribute research data to
  * <a href="http://www.diversalertnetwork.org/research/projects/pde/index.asp"
- * title="Divers Alert Network" target="_">Project Dive Exploration</a>.
+ * title="Divers Alert Network" target="_">Project Dive Exploration</a>. The DL7
+ * format was developed as a modification of the Health Level 7 (HL7) V2.x
+ * Messaging Standard and shares much of the same structure.
  *
  * @author Nick Radov
  * @see <a href=

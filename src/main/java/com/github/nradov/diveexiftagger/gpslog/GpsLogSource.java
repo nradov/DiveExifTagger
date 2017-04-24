@@ -2,6 +2,8 @@ package com.github.nradov.diveexiftagger.gpslog;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import javax.annotation.Nonnull;
 
@@ -13,24 +15,40 @@ import javax.annotation.Nonnull;
  *
  * @author Nick Radov
  */
-public interface GpsLogSource {
+public abstract class GpsLogSource {
 
-    /**
-     * Get the GPS coordinates that were logged closest to a particular instant
-     * in time.
-     *
-     * @param instant
-     *            target instant in time
-     * @param tolerance
-     *            maximum tolerance between {@code instant} and the closest data
-     *            point
-     * @return GPS coordinates that were logged closest to {@code instant} and
-     *         are within {@code tolerance}
-     * @throws IllegalArgumentException
-     *             if no GPS coordinates were logged within {@code tolerance}
-     */
-    @Nonnull
-    GpsCoordinates getCoordinatesByTemporalProximity(Instant instant,
-            Duration tolerance);
+	protected final SortedSet<GpsCoordinates> coords = new TreeSet<>();
+
+	/**
+	 * Get the GPS coordinates that were logged an a particular instant in time.
+	 *
+	 * @param instant
+	 *            target instant in time
+	 * @return GPS coordinates that were logged at {@code instant}
+	 * @throws IllegalArgumentException
+	 *             if no GPS coordinates were logged
+	 */
+	@Nonnull
+	public GpsCoordinates getCoordinates(@Nonnull final Instant instant) {
+		return getCoordinatesByTemporalProximity(instant, Duration.ZERO);
+	}
+
+	/**
+	 * Get the GPS coordinates that were logged closest to a particular instant
+	 * in time.
+	 *
+	 * @param instant
+	 *            target instant in time
+	 * @param tolerance
+	 *            maximum tolerance between {@code instant} and the closest data
+	 *            point
+	 * @return GPS coordinates that were logged closest to {@code instant} and
+	 *         are within {@code tolerance}
+	 * @throws IllegalArgumentException
+	 *             if no GPS coordinates were logged within {@code tolerance}
+	 */
+	@Nonnull
+	public abstract GpsCoordinates getCoordinatesByTemporalProximity(@Nonnull Instant instant,
+			@Nonnull Duration tolerance);
 
 }

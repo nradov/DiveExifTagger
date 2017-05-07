@@ -5,18 +5,16 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Locale;
 import java.util.stream.Stream;
 
-import javax.annotation.Nonnull;
-
 /**
  * GPS log source for
  * <a target="_" title="National Marine Electronics Association" href=
  * "http://www.nmea.org/">NMEA</a> 0183 files, including some Canon cameras.
+ * <em>Note:</em> Currently
  *
  * @author Nick Radov
  * @see <a target="_" href="http://www.gpsinformation.org/dale/nmea.htm">NMEA
@@ -30,9 +28,9 @@ public class Nmea0183 extends GpsLogSource {
 
 	private static final String SENTENCE_BEGIN = "$";
 
-	private static final String GPS_RECEIVIER_PREFIX = "GP";
+	private static final String GPS_RECEIVER_PREFIX = "GP";
 
-	private static final int SENTENCE_PREFIX_LENGTH = (SENTENCE_BEGIN + GPS_RECEIVIER_PREFIX).length();
+	private static final int SENTENCE_PREFIX_LENGTH = (SENTENCE_BEGIN + GPS_RECEIVER_PREFIX).length();
 
 	private static final class SentenceDataType {
 
@@ -68,8 +66,10 @@ public class Nmea0183 extends GpsLogSource {
 	 *             if any error occurs while reading the log file
 	 */
 	public Nmea0183(final Path path) throws IOException {
-		// The NMEA 0183 sentences don't contain the date so we have to parse
-		// that out of the file name
+		/*
+		 * Fix Information (GGA) sentences don't contain the date so we have to
+		 * parse that out of the file name
+		 */
 		final String fileName = path.getName(path.getNameCount() - 1).toString();
 		if (!fileName.toUpperCase(Locale.US).endsWith(".LOG")) {
 			throw new IllegalArgumentException("unsupported file extension \"" + fileName + "\"");
@@ -82,12 +82,14 @@ public class Nmea0183 extends GpsLogSource {
 		final Instant base = Instant.parse(iso);
 
 		try (final Stream<String> stream = Files.lines(path, StandardCharsets.US_ASCII)) {
-			stream.filter(line -> line.startsWith(SENTENCE_BEGIN + GPS_RECEIVIER_PREFIX))
+			stream.filter(line -> line.startsWith(SENTENCE_BEGIN + GPS_RECEIVER_PREFIX))
 					.forEach(sentence -> addPoint(sentence, base));
 		}
 	}
 
 	private static final String FIELD_DELIMITER = ",";
+
+	private transient GpsCoordinates lastPoint;
 
 	private void addPoint(final String sentence, final Instant base) {
 		if (sentence.length() >= MINIMUM_SENTENCE_LENGTH) {
@@ -139,10 +141,10 @@ public class Nmea0183 extends GpsLogSource {
 
 		final double altitude = Double.parseDouble(fields[9]);
 		if (!"M".equalsIgnoreCase(fields[10])) {
-			throw new IllegalArgumentException("unexpected altitude unites " + fields[10]);
+			throw new IllegalArgumentException("unexpected altitude units " + fields[10]);
 		}
 
-		coords.add(new GpsCoordinates(time, latitude, longitude, altitude));
+		addPoint(new GpsCoordinates(time, latitude, longitude, altitude));
 	}
 
 	private static int getLatitudeDirectionMultiplier(final String direction) {
@@ -169,28 +171,6 @@ public class Nmea0183 extends GpsLogSource {
 
 	private void addPointRecommendedMinimumDataForGps(final String[] fields) {
 
-	}
-
-	@Override
-	@Nonnull
-	public GpsCoordinates getCoordinatesByTemporalProximity(@Nonnull final Instant instant,
-			@Nonnull final Duration tolerance) {
-		final Instant low = instant.minus(tolerance);
-		final Instant high = instant.plus(tolerance);
-
-		// TODO: optimize this to use a binary search instead of iteration so
-		// that it's O(log(n)) instead of O(n)
-		for (final GpsCoordinates point : coords) {
-			if (point.getTimestamp().equals(instant)) {
-				// exact match
-				return point;
-			} else if (low.compareTo(point.getTimestamp()) <= 0 && high.compareTo(point.getTimestamp()) >= 0) {
-				// within tolerance
-				// TODO: interpolate between the two closest points
-				return point;
-			}
-		}
-		throw new IllegalArgumentException("no coordinates at " + instant);
 	}
 
 	private static final String CHECKSUM_DELIMITER = "*";

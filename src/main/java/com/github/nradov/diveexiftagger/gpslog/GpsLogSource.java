@@ -5,7 +5,7 @@ import java.time.Instant;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import javax.annotation.Nonnull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * Source of logged GPS latitude / longitude track data. It can be queried to
@@ -17,7 +17,11 @@ import javax.annotation.Nonnull;
  */
 public abstract class GpsLogSource {
 
-	protected final SortedSet<GpsCoordinates> coords = new TreeSet<>();
+	private final SortedSet<GpsCoordinates> coords = new TreeSet<>();
+
+	protected boolean addPoint(final GpsCoordinates point) {
+		return coords.add(point);
+	}
 
 	/**
 	 * Get the GPS coordinates that were logged an a particular instant in time.
@@ -28,27 +32,30 @@ public abstract class GpsLogSource {
 	 * @throws IllegalArgumentException
 	 *             if no GPS coordinates were logged
 	 */
-	@Nonnull
-	public GpsCoordinates getCoordinates(@Nonnull final Instant instant) {
+	@NonNull
+	public GpsCoordinates getCoordinates(@NonNull final Instant instant) {
 		return getCoordinatesByTemporalProximity(instant, Duration.ZERO);
 	}
 
-	/**
-	 * Get the GPS coordinates that were logged closest to a particular instant
-	 * in time.
-	 *
-	 * @param instant
-	 *            target instant in time
-	 * @param tolerance
-	 *            maximum tolerance between {@code instant} and the closest data
-	 *            point
-	 * @return GPS coordinates that were logged closest to {@code instant} and
-	 *         are within {@code tolerance}
-	 * @throws IllegalArgumentException
-	 *             if no GPS coordinates were logged within {@code tolerance}
-	 */
-	@Nonnull
-	public abstract GpsCoordinates getCoordinatesByTemporalProximity(@Nonnull Instant instant,
-			@Nonnull Duration tolerance);
+	@NonNull
+	public GpsCoordinates getCoordinatesByTemporalProximity(@NonNull final Instant instant,
+			@NonNull final Duration tolerance) {
+		final Instant low = instant.minus(tolerance);
+		final Instant high = instant.plus(tolerance);
+
+		// TODO: optimize this to use a binary search instead of iteration so
+		// that it's O(log(n)) instead of O(n)
+		for (final GpsCoordinates point : coords) {
+			if (point.getTimestamp().equals(instant)) {
+				// exact match
+				return point;
+			} else if (low.compareTo(point.getTimestamp()) <= 0 && high.compareTo(point.getTimestamp()) >= 0) {
+				// within tolerance
+				// TODO: interpolate between the two closest points
+				return point;
+			}
+		}
+		throw new IllegalArgumentException("no coordinates at " + instant);
+	}
 
 }

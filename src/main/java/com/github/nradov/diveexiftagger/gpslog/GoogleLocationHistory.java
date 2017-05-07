@@ -9,6 +9,6 @@ package com.github.nradov.diveexiftagger.gpslog;
  *
  * @author Nick Radov
  */
-public class GoogleLocationHistory {
+public class GoogleLocationHistory extends GpsLogSource {
 
 }

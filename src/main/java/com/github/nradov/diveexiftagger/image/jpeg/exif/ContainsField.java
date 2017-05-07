@@ -16,9 +16,7 @@ public abstract class ContainsField {
 
 	/**
 	 * Search for a metadata field with a particular tag.
-	 *
-	 * @param <F>
-	 *
+	 * 
 	 * @param tag
 	 *            metadata field tag
 	 * @param clazz

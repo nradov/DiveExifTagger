@@ -6,6 +6,9 @@ import java.time.Instant;
 
 import javax.annotation.Nonnull;
 
+import org.checkerframework.checker.units.qual.Angle;
+import org.checkerframework.checker.units.qual.m;
+
 /**
  * A single set of 2-D (without altitude) or 3-D (with altitude) GPS
  * coordinates.
@@ -16,8 +19,11 @@ public final class GpsCoordinates implements Comparable<GpsCoordinates> {
 
 	@Nonnull
 	private final Instant timestamp;
+	@Angle
 	private final double latitude;
+	@Angle
 	private final double longitude;
+	@m
 	private final double altitude;
 
 	/**
@@ -28,14 +34,19 @@ public final class GpsCoordinates implements Comparable<GpsCoordinates> {
 	 * @param longitude
 	 *            longitude in degrees between -180 and +180 (inclusive)
 	 */
-	public GpsCoordinates(@Nonnull final Instant timestamp, final double latitude, final double longitude) {
+	public GpsCoordinates(@Nonnull final Instant timestamp, @Angle final double latitude,
+			@Angle final double longitude) {
 		this(timestamp, latitude, longitude, Double.NaN);
 	}
 
+	@Angle
 	private static final double NORTH_POLE_LATITUDE = 90d;
+	@Angle
 	private static final double SOUTH_POLE_LATITUDE = -90d;
 
+	@Angle
 	private static final double MAX_LONGITUDE = 180d;
+	@Angle
 	private static final double MIN_LONGITUDE = -180d;
 
 	/**
@@ -51,8 +62,8 @@ public final class GpsCoordinates implements Comparable<GpsCoordinates> {
 	 * @throws IllegalArgumentException
 	 *             if {@code latitude} or {@code longitude} is out of range
 	 */
-	public GpsCoordinates(@Nonnull final Instant timestamp, final double latitude, final double longitude,
-			final double altitude) {
+	public GpsCoordinates(@Nonnull final Instant timestamp, @Angle final double latitude, @Angle final double longitude,
+			@m final double altitude) {
 		this.timestamp = timestamp;
 		if (latitude > NORTH_POLE_LATITUDE || latitude < SOUTH_POLE_LATITUDE) {
 			throw new IllegalArgumentException("latitude out of range");
@@ -75,6 +86,7 @@ public final class GpsCoordinates implements Comparable<GpsCoordinates> {
 	 *
 	 * @return latitude in the range -90 to +90
 	 */
+	@Angle
 	public double getLatitude() {
 		return latitude;
 	}
@@ -84,7 +96,7 @@ public final class GpsCoordinates implements Comparable<GpsCoordinates> {
 	 *
 	 * @return longitude in the range -180 to +180
 	 */
-	@Nonnull
+	@Angle
 	public double getLongitude() {
 		return longitude;
 	}
@@ -106,7 +118,7 @@ public final class GpsCoordinates implements Comparable<GpsCoordinates> {
 	 * @throws IllegalStateException
 	 *             if this set of coordinates doesn't include an altitude
 	 */
-	@Nonnull
+	@m
 	public double getAltitude() {
 		if (hasAltitude()) {
 			return altitude;

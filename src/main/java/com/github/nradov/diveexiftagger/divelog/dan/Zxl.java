@@ -10,24 +10,42 @@ import java.nio.file.Path;
  */
 public final class Zxl extends Zxu {
 
-    private Zpd zpd;
-    private Zpa zpa;
+	private Zpd zpd;
+	private Zpa zpa;
 
-    public Zxl(final Path path) throws IOException {
-        super(path);
-    }
+	/**
+	 * Create a new {@code Zxl} by parsing a message file.
+	 *
+	 * @param path
+	 *            message file
+	 * @throws IOException
+	 *             if any error occurs while reading the message file
+	 */
+	public Zxl(final Path path) throws IOException {
+		super(path);
+	}
 
-    Zpd getZpd() {
-        return zpd;
-    }
+	/**
+	 * Get the diver identification and demographics.
+	 * 
+	 * @return ZPD segment
+	 */
+	Zpd getZpd() {
+		return zpd;
+	}
 
-    Zpa getZpa() {
-        return zpa;
-    }
+	/**
+	 * Get the diver's address.
+	 * 
+	 * @return ZPA segment
+	 */
+	Zpa getZpa() {
+		return zpa;
+	}
 
-    @Override
-    DiveGroupZxl getDiveGroup(final int index) {
-        return (DiveGroupZxl) super.getDiveGroup(index);
-    }
+	@Override
+	DiveGroupZxl getDiveGroup(final int index) {
+		return (DiveGroupZxl) super.getDiveGroup(index);
+	}
 
 }

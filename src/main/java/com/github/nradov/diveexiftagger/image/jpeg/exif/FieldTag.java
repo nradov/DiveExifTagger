@@ -986,11 +986,41 @@ public enum FieldTag {
 	YResolution(283, RATIONAL),
 
 	// Canon maker note
+	// http://www.sno.phy.queensu.ca/~phil/exiftool/TagNames/Canon.html
 
-	CameraSettings1(Proprietary.Canon, 1), CameraSettings2(Proprietary.Canon, 4), ImageType(Proprietary.Canon, 6,
-			ASCII), FirmwareVersion(Proprietary.Canon, 7, ASCII), ImageNumber(Proprietary.Canon, 8), OwnerName(
-					Proprietary.Canon,
-					9), CameraSerialNumber(Proprietary.Canon, 12), CustomFunctions(Proprietary.Canon, 15);
+	CameraSettings1(Proprietary.Canon, 1), //
+	CanonFlashInfo(Proprietary.Canon, 3), //
+	CameraSettings2(Proprietary.Canon, 4), //
+	ImageType(Proprietary.Canon, 6, ASCII), //
+	FirmwareVersion(Proprietary.Canon, 7, ASCII), //
+	ImageNumber(Proprietary.Canon, 8), //
+	OwnerName(Proprietary.Canon, 9), //
+	CameraSerialNumber(Proprietary.Canon, 12), //
+	CanonCameraInfo(Proprietary.Canon, 13), //
+	CustomFunctions(Proprietary.Canon, 15), //
+	CanonFileLength(Proprietary.Canon, 0xE), //
+	CanonCustomFunctions(Proprietary.Canon, 0xF), //
+	CanonModelId(Proprietary.Canon, 0x10), //
+	ThumbnailImageValidArea(Proprietary.Canon, 0x13), //
+	CanonTag0x18(Proprietary.Canon, 0x18), //
+	CanonTag0x19(Proprietary.Canon, 0x19), //
+	CanonTag0x1C(Proprietary.Canon, 0x1C), //
+	CanonTag0x1D(Proprietary.Canon, 0x1D), //
+	CanonTag0x1E(Proprietary.Canon, 0x1E), //
+	CanonTag0x1F(Proprietary.Canon, 0x1F), //
+	CanonTag0x22(Proprietary.Canon, 0x22), //
+	CanonTag0x23(Proprietary.Canon, 0x23), //
+	CanonAFInfo2(Proprietary.Canon, 0x26), //
+	CanonTag0x27(Proprietary.Canon, 0x27), //
+	CanonTag0x28(Proprietary.Canon, 0x28), //
+	CanonTag0x2d(Proprietary.Canon, 0x2D), //
+	CanonTag0x2E(Proprietary.Canon, 0x2E), //
+	CanonTag0x2F(Proprietary.Canon, 0x2F), //
+	CanonTag0x31(Proprietary.Canon, 0x31), //
+	CanonTag0x32(Proprietary.Canon, 0x32), //
+	CanonTag0x33(Proprietary.Canon, 0x33), //
+	CanonTag0x9A(Proprietary.Canon, 0x9A), //
+	VRDOffset(Proprietary.Canon, 0xD0);
 
 	/**
 	 * Qualifiers for vendor proprietary tags.

@@ -9,29 +9,30 @@ import java.nio.ByteOrder;
  */
 class Short extends DataType {
 
-    private final short value;
+	private final short value;
 
-    Short(final byte[] b, final int newIndex, final ByteOrder byteOrder) {
-        value = Utilities.convertToShort(b, newIndex, byteOrder);
-    }
+	Short(final byte[] b, final int newIndex, final ByteOrder byteOrder) {
+		value = Utilities.convertToShort(b, newIndex, byteOrder);
+	}
 
-    short getValue() {
-        return value;
-    }
+	short getValue() {
+		return value;
+	}
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return 2
-     */
-    @Override
-    int getLength() {
-        return FieldType.SHORT.getLength();
-    }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return 2
+	 */
+	@Override
+	int getLength() {
+		return FieldType.SHORT.getLength();
+	}
 
-    @Override
-    public String toString() {
-        return java.lang.Long.toUnsignedString(value);
-    }
+	@Override
+	public String toString() {
+		// https://stackoverflow.com/a/37907154/1470637
+		return Integer.toString(java.lang.Short.toUnsignedInt(value));
+	}
 
 }

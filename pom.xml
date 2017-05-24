@@ -4,7 +4,7 @@
 	<groupId>com.github.nradov</groupId>
 	<artifactId>diveexiftagger</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>DiveExifTagger</name>
+	<name>Dive EXIF Tagger</name>
 	<url>https://github.com/nradov/DiveExifTagger</url>
 	<dependencies>
 		<dependency>

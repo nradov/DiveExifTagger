@@ -29,6 +29,7 @@ class ImageFileDirectory extends ContainsField implements ReadableByteChannel {
 	private final int nextIfdOffset;
 
 	ImageFileDirectory(final byte[] b, final int offset, final ByteOrder byteOrder, final Proprietary proprietary) {
+		System.err.println("offset = " + offset + " (0x" + Integer.toHexString(offset) + ")");
 		int index = offset;
 		final short numberOfDirectoryEntries = convertToShort(b, index, byteOrder);
 		index += java.lang.Short.BYTES;
@@ -93,10 +94,15 @@ class ImageFileDirectory extends ContainsField implements ReadableByteChannel {
 	int getLength() {
 		int length = 0;
 		for (final DirectoryEntry e : directoryEntries) {
-			length += DirectoryEntry.BYTES;
-			if (e.getCount() * e.getType().getLength() > Integer.BYTES) {
-				// actual value is offset
-				length += e.getCount() * e.getType().getLength();
+			if (FieldTag.MakerNote.equals(e.getTag())) {
+				// TODO: calculate different for MakerNote
+				throw new UnsupportedOperationException();
+			} else {
+				length += DirectoryEntry.BYTES;
+				if (e.getCount() * e.getType().getLength() > Integer.BYTES) {
+					// actual value is offset
+					length += e.getCount() * e.getType().getLength();
+				}
 			}
 		}
 		length += exif == null ? 0 : exif.getLength();

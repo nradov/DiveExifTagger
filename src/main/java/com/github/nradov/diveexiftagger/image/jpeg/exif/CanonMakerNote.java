@@ -9,6 +9,11 @@ import java.nio.ByteOrder;
  * @see <a target="_" href=
  *      "http://www.ozhiker.com/electronics/pjmt/jpeg_info/canon_mn.html">Canon
  *      Makernote Format Specification</a>
+ * @see <a target="_" href=
+ *      "http://www.sno.phy.queensu.ca/~phil/exiftool/TagNames/Canon.html">Canon
+ *      Tags</a>
+ * @see <a target="_" href="http://www.burren.cx/david/canon.html">EXIF
+ *      MakerNote of Canon</a>
  */
 class CanonMakerNote extends ImageFileDirectory {
 

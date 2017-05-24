@@ -19,15 +19,15 @@ import java.math.BigDecimal;
  * For example, the following two values with different representations, "01.20"
  * and "1.2", are identical. Except for the optional leading sign (+ or -) and
  * the optional decimal point (.), no non-numeric ASCII characters are allowed.
- * Thus, the value <12 should be encoded as a structured numeric (SN)
+ * Thus, the value &lt;12 should be encoded as a structured numeric (SN)
  * (preferred) or as a string (ST) (allowed, but not preferred) data type.
  *
  * @author Nick Radov
  */
 interface Nm extends DataType {
 
-    BigDecimal toBigDecimal();
+	BigDecimal toBigDecimal();
 
-    float floatValue();
+	float floatValue();
 
 }

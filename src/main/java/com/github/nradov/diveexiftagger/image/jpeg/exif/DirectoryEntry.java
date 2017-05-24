@@ -111,6 +111,9 @@ class DirectoryEntry {
 	 * @return number of values
 	 */
 	short getCount() {
+		if (value == null) {
+			throw new IllegalStateException("no value");
+		}
 		return (short) value.size();
 	}
 
@@ -177,7 +180,9 @@ class DirectoryEntry {
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
 		sb.append(getTag());
-		sb.append(" = ");
+		sb.append(" (");
+		sb.append(Utilities.formatShortAsUnsignedHex(getTag().getTag()));
+		sb.append(") = ");
 		if (getTag().equals(FieldTag.MakerNote)) {
 			// special case for proprietary MakerNote tags
 			// TODO: check for the camera manufacturer to determine the format

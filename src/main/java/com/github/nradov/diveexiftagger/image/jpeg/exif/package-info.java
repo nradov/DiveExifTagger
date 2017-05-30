@@ -38,4 +38,15 @@ package com.github.nradov.diveexiftagger.image.jpeg.exif;
  *      "https://github.com/drewnoakes/metadata-extractor">metadata-extractor</a>
  * @see <a target="_" href="http://www.exiv2.org/">Exiv2 - Image metadata
  *      library and tools</a>
+ * @see <a target="_" href=
+ *      "http://www.fileformat.info/format/tiff/corion.htm">The TIFF File
+ *      Format</a>
+ * @see <a target="_" href=
+ *      "http://gvsoft.no-ip.org/exif/exif-explanation.html">Description of Exif
+ *      file format</a>
+ * @see <a target="_" href="http://www.exif.org/dcf.PDF">Design rule for Camera
+ *      File system Version 1.0 JEIDA-49-2-1998</a>
+ * @see <a target="_" href=
+ *      "https://wwwimages.adobe.com/content/dam/Adobe/en/devnet/xmp/pdfs/XMPSpecificationPart3.pdf">XMP
+ *      Specification Part 3: Storage in Files</a>
  */

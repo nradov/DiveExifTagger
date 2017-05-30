@@ -31,7 +31,6 @@ class App1Exif extends App1Contents {
 	private final List<ImageFileDirectory> ifds = new ArrayList<>(2);
 
 	App1Exif(final byte[] content) throws IOException {
-		// http://www.fileformat.info/format/tiff/corion.htm
 		int index = 0;
 		final String byteOrder = new String(content, index, ByteOrderConstants.LITTLE_ENDIAN.length(),
 				StandardCharsets.US_ASCII);

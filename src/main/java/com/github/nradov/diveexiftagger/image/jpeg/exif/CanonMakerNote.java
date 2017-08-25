@@ -21,4 +21,9 @@ class CanonMakerNote extends ImageFileDirectory {
 		super(b, offset, byteOrder, FieldTag.Proprietary.Canon);
 	}
 
+	@Override
+	int getLength() {
+		// add 2 bytes for the entry count
+		return FieldType.SHORT.getLength() + super.getLength();
+	}
 }

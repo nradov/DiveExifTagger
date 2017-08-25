@@ -111,10 +111,14 @@ class DirectoryEntry {
 	 * @return number of values
 	 */
 	short getCount() {
-		if (value == null) {
-			throw new IllegalStateException("no value");
+		if (makerNote == null) {
+			if (value == null) {
+				throw new IllegalStateException("no value");
+			}
+			return (short) value.size();
+		} else {
+			return (short) makerNote.getLength();
 		}
-		return (short) value.size();
 	}
 
 	/**

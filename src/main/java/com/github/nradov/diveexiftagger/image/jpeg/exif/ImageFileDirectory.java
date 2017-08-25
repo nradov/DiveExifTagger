@@ -94,11 +94,11 @@ class ImageFileDirectory extends ContainsField implements ReadableByteChannel {
 	int getLength() {
 		int length = 0;
 		for (final DirectoryEntry e : directoryEntries) {
+			length += DirectoryEntry.BYTES;
 			if (FieldTag.MakerNote.equals(e.getTag())) {
 				// TODO: calculate different for MakerNote
-				throw new UnsupportedOperationException();
+				length += e.getCount();
 			} else {
-				length += DirectoryEntry.BYTES;
 				if (e.getCount() * e.getType().getLength() > Integer.BYTES) {
 					// actual value is offset
 					length += e.getCount() * e.getType().getLength();

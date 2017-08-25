@@ -17,9 +17,11 @@ import org.checkerframework.checker.nullness.qual.NonNull;
  */
 public abstract class GpsLogSource {
 
+	private boolean interpolate = false;
+
 	private final SortedSet<GpsCoordinates> coords = new TreeSet<>();
 
-	protected boolean addPoint(final GpsCoordinates point) {
+	boolean addPoint(final GpsCoordinates point) {
 		return coords.add(point);
 	}
 
@@ -56,6 +58,19 @@ public abstract class GpsLogSource {
 			}
 		}
 		throw new IllegalArgumentException("no coordinates at " + instant);
+	}
+
+	public boolean isInterpolate() {
+		return interpolate;
+	}
+
+	/**
+	 * Set whether to interpolate between the two closest points.
+	 * 
+	 * @param interpolate
+	 */
+	public void setInterpolate(final boolean interpolate) {
+		this.interpolate = interpolate;
 	}
 
 }

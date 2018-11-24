@@ -7,8 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 abstract class SegmentGroup {
 
@@ -30,37 +29,37 @@ abstract class SegmentGroup {
      */
     final static String SEGMENT_TERMINATOR = "\\u0D";
 
-    @Nonnull
+    @NonNull
     St getFieldSeparator() {
         return parent.getFieldSeparator();
     }
 
-    @Nonnull
+    @NonNull
     St getEncodingCharacters() {
         return parent.getEncodingCharacters();
     }
 
-    @Nonnull
+    @NonNull
     final String getFieldSeparatorString() {
         return getFieldSeparator().toString();
     }
 
-    @Nonnull
+    @NonNull
     final String getComponentSeparatorString() {
         return getEncodingCharacters().toString().substring(0, 1);
     }
 
-    @Nonnull
+    @NonNull
     final String getRepetitionSeparatorString() {
         return getEncodingCharacters().toString().substring(1, 2);
     }
 
-    @Nonnull
+    @NonNull
     final String getComponentBracketsString() {
         return getEncodingCharacters().toString().substring(2, 4);
     }
 
-    @Nonnull
+    @NonNull
     final String getSegmentExtensionString() {
         return getEncodingCharacters().toString().substring(4, 6);
     }
@@ -73,18 +72,17 @@ abstract class SegmentGroup {
         return segments.get(index);
     }
 
-    @Nonnull
+    @NonNull
     <T extends Segment> Optional<T> getFirstSegment(final Class<T> clazz) {
         return getSegments(clazz).findFirst();
     }
 
     @SuppressWarnings("unchecked")
-    <T extends Segment> Stream<T> getSegments(@Nonnull final Class<T> clazz) {
+    <T extends Segment> Stream<T> getSegments(@NonNull final Class<T> clazz) {
         return (Stream<T>) segments.stream()
                 .filter(segment -> clazz.isAssignableFrom(segment.getClass()));
     }
 
-    @Nullable
     public SegmentGroup getParent() {
         return parent;
     }
@@ -103,8 +101,8 @@ abstract class SegmentGroup {
      * @return first list element starting with prefix, or {@code null} if there
      *         is no match
      */
-    static String firstElementStartingWith(@Nonnull final List<String> list,
-            @Nonnull final String prefix) {
+    static String firstElementStartingWith(@NonNull final List<String> list,
+            @NonNull final String prefix) {
         for (final String s : list) {
             if (s != null && s.startsWith(prefix)) {
                 return s;

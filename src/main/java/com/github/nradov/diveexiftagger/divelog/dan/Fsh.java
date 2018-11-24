@@ -1,6 +1,6 @@
 package com.github.nradov.diveexiftagger.divelog.dan;
 
-import javax.annotation.Nonnull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * File segment header. Identifies the sender and the type of file.
@@ -58,7 +58,7 @@ class Fsh extends Segment {
     }
 
     @Override
-    @Nonnull
+    @NonNull
     String getComponentSeparatorString() {
         return getEncodingCharacters().toString().substring(0, 1);
     }

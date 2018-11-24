@@ -1,6 +1,6 @@
 package com.github.nradov.diveexiftagger.divelog.dan;
 
-import javax.annotation.Nonnull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * Dive profile.
@@ -29,7 +29,7 @@ final class Zdp extends Segment {
     private final NmField otu;
     private final NmField ascentRate;
 
-    Zdp(@Nonnull final SegmentGroup parent, @Nonnull final String value) {
+    Zdp(@NonNull final SegmentGroup parent, @NonNull final String value) {
         super(parent);
         if (!value.startsWith(ID)) {
             throw new IllegalArgumentException("wrong segment ID");

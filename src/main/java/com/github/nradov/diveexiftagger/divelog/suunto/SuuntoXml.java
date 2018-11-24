@@ -8,11 +8,11 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 
-import javax.annotation.Nonnull;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -107,7 +107,7 @@ public class SuuntoXml implements Dive {
     }
 
     @Override
-    public float getDepthMeters(@Nonnull final Instant instant) {
+    public float getDepthMeters(@NonNull final Instant instant) {
         if (!isDuringDive(instant)) {
             throw new IllegalArgumentException(
                     instant + " is not during this dive");
@@ -126,7 +126,7 @@ public class SuuntoXml implements Dive {
     }
 
     @Override
-    public boolean isDuringDive(@Nonnull final Instant instant) {
+    public boolean isDuringDive(@NonNull final Instant instant) {
         return !(instant.isAfter(end) || instant.isBefore(start));
     }
 

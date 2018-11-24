@@ -1,6 +1,6 @@
 package com.github.nradov.diveexiftagger.divelog.dan;
 
-import javax.annotation.Nonnull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 class Segment {
 
@@ -26,17 +26,17 @@ class Segment {
         return parent.getFieldSeparator();
     }
 
-    @Nonnull
+    @NonNull
     String getFieldSeparatorString() {
         return getParent().getFieldSeparatorString();
     }
 
-    @Nonnull
+    @NonNull
     String getComponentSeparatorString() {
         return getParent().getComponentSeparatorString();
     }
 
-    @Nonnull
+    @NonNull
     String getRepetitionSeparatorString() {
         return getParent().getRepetitionSeparatorString();
     }

@@ -2,8 +2,7 @@ package com.github.nradov.diveexiftagger.divelog;
 
 import java.time.Instant;
 
-import javax.annotation.Nonnull;
-
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.units.qual.m;
 
 /**
@@ -18,7 +17,7 @@ public interface Dive extends Comparable<Dive> {
 	 *
 	 * @return time when the dive started
 	 */
-	@Nonnull
+	@NonNull
 	Instant getStart();
 
 	/**
@@ -26,7 +25,7 @@ public interface Dive extends Comparable<Dive> {
 	 *
 	 * @return time when the dive ended
 	 */
-	@Nonnull
+	@NonNull
 	Instant getEnd();
 
 	/**
@@ -37,7 +36,7 @@ public interface Dive extends Comparable<Dive> {
 	 * @return {@code true} if {@code cal} falls within the start and end time
 	 *         (inclusive) of this dive; otherwise {@code false}
 	 */
-	boolean isDuringDive(@Nonnull Instant instant);
+	boolean isDuringDive(@NonNull Instant instant);
 
 	/**
 	 * Get the diver's depth at a particular time.
@@ -50,7 +49,7 @@ public interface Dive extends Comparable<Dive> {
 	 *             times (inclusive) of this dive
 	 */
 	@m
-	float getDepthMeters(@Nonnull Instant instant);
+	float getDepthMeters(@NonNull Instant instant);
 
 	/**
 	 * {@inheritDoc}

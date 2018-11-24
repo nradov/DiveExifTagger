@@ -12,8 +12,6 @@ import java.time.ZoneOffset;
 import java.util.regex.Pattern;
 import java.util.zip.ZipException;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.cli.CommandLine;
@@ -22,11 +20,11 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.xml.sax.SAXException;
 
 import com.github.nradov.diveexiftagger.divelog.DiveSourceFactory;
 import com.github.nradov.diveexiftagger.divelog.DivesSource;
-import com.github.nradov.diveexiftagger.gpslog.GpsLogSource;
 
 /**
  * <p>
@@ -48,28 +46,23 @@ public class Tagger {
 
     final Path imageFile;
 
-    @CheckForNull
     final DivesSource source;
-    @CheckForNull
-    final GpsLogSource gpsSource;
 
     /** Time zone offset for the local time on the image files and dive logs. */
-    @CheckForNull
     final ZoneOffset zoneOffset;
 
     final private static Options options = new Options();
 
-    public Tagger(@Nonnull final Path imageFile,
-            @Nonnull final Path diveLogsFile) throws ZipException, IOException,
+    public Tagger(@NonNull final Path imageFile,
+            @NonNull final Path diveLogsFile) throws ZipException, IOException,
             ParserConfigurationException, SAXException {
         this.imageFile = imageFile;
         zoneOffset = null;
         source = DiveSourceFactory.create(diveLogsFile, zoneOffset);
-        gpsSource = null;
     }
 
-    public Tagger(@Nonnull final String imagePathname,
-            @Nonnull final String diveLogPathname) throws ZipException,
+    public Tagger(@NonNull final String imagePathname,
+            @NonNull final String diveLogPathname) throws ZipException,
             IOException, ParserConfigurationException, SAXException {
         this(Paths.get(imagePathname), Paths.get(diveLogPathname));
     }

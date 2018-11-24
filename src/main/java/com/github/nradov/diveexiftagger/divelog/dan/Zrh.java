@@ -1,6 +1,6 @@
 package com.github.nradov.diveexiftagger.divelog.dan;
 
-import javax.annotation.Nonnull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * Record header.
@@ -21,7 +21,7 @@ class Zrh extends Segment {
     private final ZceField tankPressureUnit;
     private final ZceField tankVolumeUnit;
 
-    Zrh(@Nonnull final Message parent, @Nonnull final String s) {
+    Zrh(@NonNull final Message parent, @NonNull final String s) {
         super(parent);
         if (!s.startsWith(ID)) {
             throw new IllegalArgumentException("wrong segment ID");

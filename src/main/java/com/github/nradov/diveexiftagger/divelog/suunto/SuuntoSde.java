@@ -14,9 +14,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
-import javax.annotation.Nonnull;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.xml.sax.SAXException;
 
 import com.github.nradov.diveexiftagger.divelog.Dive;
@@ -40,14 +40,14 @@ public class SuuntoSde implements DivesSource {
 
     private final NavigableSet<Dive> dives = new TreeSet<>();
 
-    public SuuntoSde(@Nonnull final String pathname,
-            @Nonnull final ZoneOffset zoneOffset) throws ZipException,
+    public SuuntoSde(@NonNull final String pathname,
+            @NonNull final ZoneOffset zoneOffset) throws ZipException,
             IOException, ParserConfigurationException, SAXException {
         this(Paths.get(pathname), zoneOffset);
     }
 
-    public SuuntoSde(@Nonnull final Path file,
-            @Nonnull final ZoneOffset zoneOffset) throws ZipException,
+    public SuuntoSde(@NonNull final Path file,
+            @NonNull final ZoneOffset zoneOffset) throws ZipException,
             IOException, ParserConfigurationException, SAXException {
         this.zoneOffset = zoneOffset;
         zipFile = new ZipFile(file.toFile());

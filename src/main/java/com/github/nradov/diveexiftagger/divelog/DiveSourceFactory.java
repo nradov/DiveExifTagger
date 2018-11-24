@@ -7,9 +7,9 @@ import java.time.ZoneOffset;
 import java.util.Locale;
 import java.util.zip.ZipException;
 
-import javax.annotation.Nonnull;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.xml.sax.SAXException;
 
 import com.github.nradov.diveexiftagger.divelog.dan.Zxl;
@@ -84,8 +84,8 @@ public final class DiveSourceFactory {
 	 * @throws SAXException
 	 *             if an error occurs while reading an XML dive log file
 	 */
-	@Nonnull
-	public static DivesSource create(@Nonnull final Path file, @Nonnull final ZoneOffset zoneOffset)
+	@NonNull
+	public static DivesSource create(@NonNull final Path file, @NonNull final ZoneOffset zoneOffset)
 			throws ZipException, IOException, ParserConfigurationException, SAXException {
 		final String lowerCaseFile = file.toString().toLowerCase(Locale.US);
 		if (lowerCaseFile.endsWith(FileExtension.SUUNTO_DIVE_EXPORT)) {
@@ -100,7 +100,7 @@ public final class DiveSourceFactory {
 		throw new IllegalArgumentException("unrecognized file format: \"" + file + "\"");
 	}
 
-	public static DivesSource create(@Nonnull final String file, @Nonnull final ZoneOffset zoneOffset)
+	public static DivesSource create(@NonNull final String file, @NonNull final ZoneOffset zoneOffset)
 			throws ZipException, IOException, ParserConfigurationException, SAXException {
 		return create(Paths.get(file), zoneOffset);
 	}

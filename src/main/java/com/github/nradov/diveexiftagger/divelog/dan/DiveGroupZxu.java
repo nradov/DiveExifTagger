@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import javax.annotation.Nonnull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import com.github.nradov.diveexiftagger.divelog.Dive;
 
@@ -76,12 +76,12 @@ class DiveGroupZxu extends SegmentGroup implements Dive {
 	}
 
 	@Override
-	public boolean isDuringDive(@Nonnull final Instant instant) {
+	public boolean isDuringDive(@NonNull final Instant instant) {
 		return !(instant.isAfter(getEnd()) || instant.isBefore(getStart()));
 	}
 
 	@Override
-	public float getDepthMeters(@Nonnull final Instant instant) {
+	public float getDepthMeters(@NonNull final Instant instant) {
 		for (final Zdp profile : zdp) {
 			final Nm time = profile.getTime();
 			final long seconds = convertDecimalMinutesToSeconds(time);

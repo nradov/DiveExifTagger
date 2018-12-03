@@ -1,6 +1,7 @@
 package com.github.nradov.diveexiftagger.divelog;
 
 import java.time.Instant;
+import java.util.NavigableSet;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.units.qual.m;
@@ -27,4 +28,7 @@ public interface DivesSource {
 	@m
 	float getDepthMeters(@NonNull Instant instant);
 
+	@NonNull
+	NavigableSet<Dive> getDives();
+	
 }

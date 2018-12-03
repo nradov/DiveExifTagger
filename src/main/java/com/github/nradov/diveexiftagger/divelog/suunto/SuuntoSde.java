@@ -17,6 +17,7 @@ import java.util.zip.ZipFile;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.units.qual.m;
 import org.xml.sax.SAXException;
 
 import com.github.nradov.diveexiftagger.divelog.Dive;
@@ -76,5 +77,10 @@ public class SuuntoSde implements DivesSource {
         }
         throw new IllegalArgumentException("no dive at " + instant);
     }
+
+	@Override
+	public @NonNull NavigableSet<Dive> getDives() {
+		return dives;
+	}
 
 }

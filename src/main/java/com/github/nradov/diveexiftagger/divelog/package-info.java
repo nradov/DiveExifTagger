@@ -1,8 +1,7 @@
 /**
+ * Main package for dive logs. Child packages contain implementation classes for
+ * specific file formats.
  * 
- */
-/**
- * @author nrado
- *
+ * @author Nick Radov
  */
 package com.github.nradov.diveexiftagger.divelog;

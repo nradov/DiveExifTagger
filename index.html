@@ -35,7 +35,13 @@
 
     <main class="wrap">
       <section class="step" aria-labelledby="step-logs">
-        <h2 id="step-logs"><span class="num">1</span> Dive logs</h2>
+        <div class="step-head">
+          <h2 id="step-logs"><span class="num">1</span> Dive logs</h2>
+          <fieldset class="units" aria-label="Display units">
+            <label><input type="radio" name="units" value="metric" /> Metric (m, °C)</label>
+            <label><input type="radio" name="units" value="statute" /> Statute (ft, °F)</label>
+          </fieldset>
+        </div>
         <label class="dropzone" id="log-drop">
           <input type="file" id="log-input" multiple hidden />
           <span class="dz-title">Drop dive log files here, or click to choose</span>

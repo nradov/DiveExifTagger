@@ -29,6 +29,10 @@ Tags follow the Exif standard, published by CIPA as
 | Temperature | `Temperature` (Exif 2.31, `0x9400`) | Optional. Water temperature in °C at the photo's time. |
 | Time | `GPSDateStamp`, `GPSTimeStamp` | The photo's corrected UTC time. |
 
+EXIF values are always metric (metres, °C), as the standard requires. The web page
+can *display* depths and temperatures in metric or statute units (feet, °F); the
+default follows your browser's locale.
+
 Depth and temperature are linearly interpolated between the dive computer's
 samples. Photos taken shortly before or after a dive (configurable tolerance)
 are tagged as surface shots at the entry/exit point.

@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
+import { depthValue, UNIT_SYSTEMS } from './units.js';
+
 /**
  * Renders a small SVG depth profile with markers for matched photos.
  */
@@ -9,9 +11,10 @@ const PAD = { l: 34, r: 8, t: 8, b: 18 };
 /**
  * @param {import('../model.js').Dive} dive
  * @param {number[]} photoTimes UTC ms of photos matched to this dive
+ * @param {'metric'|'statute'} [units] display units for the axis labels
  * @returns {string} SVG markup
  */
-export function profileSvg(dive, photoTimes = []) {
+export function profileSvg(dive, photoTimes = [], units = 'metric') {
   const pts = dive.samples.filter((s) => s.depth !== null);
   if (pts.length < 2) return '<p class="muted">No depth samples in this log.</p>';
   const t0 = dive.startTime;
@@ -32,12 +35,14 @@ export function profileSvg(dive, photoTimes = []) {
     .join('');
 
   const minutes = Math.round((t1 - t0) / 60000);
-  return `<svg class="profile" viewBox="0 0 ${W} ${H}" role="img" aria-label="Depth profile, max ${maxD.toFixed(1)} metres over ${minutes} minutes">
+  const unit = UNIT_SYSTEMS[units].depth;
+  const maxLabel = `${depthValue(maxD, units).toFixed(0)} ${unit}`;
+  return `<svg class="profile" viewBox="0 0 ${W} ${H}" role="img" aria-label="Depth profile, max ${maxLabel} over ${minutes} minutes">
     <line class="axis" x1="${PAD.l}" x2="${W - PAD.r}" y1="${y(0)}" y2="${y(0)}"/>
     <path class="depth" d="${d}"/>
     ${markers}
-    <text class="label" x="${PAD.l - 4}" y="${y(0) + 4}" text-anchor="end">0 m</text>
-    <text class="label" x="${PAD.l - 4}" y="${y(maxD)}" text-anchor="end">${maxD.toFixed(0)} m</text>
+    <text class="label" x="${PAD.l - 4}" y="${y(0) + 4}" text-anchor="end">0 ${unit}</text>
+    <text class="label" x="${PAD.l - 4}" y="${y(maxD)}" text-anchor="end">${maxLabel}</text>
     <text class="label" x="${W - PAD.r}" y="${H - 4}" text-anchor="end">${minutes} min</text>
   </svg>`;
 }

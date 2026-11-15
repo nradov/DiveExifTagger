@@ -7,6 +7,7 @@ import { readExif, writeExif, parseExifDate } from './exif/jpeg-exif.js';
 import { photoTime, matchPhoto } from './match.js';
 import { zipSync } from 'fflate';
 import { profileSvg } from './ui/profile.js';
+import { defaultUnits, formatDepth, formatTemperature } from './ui/units.js';
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -15,6 +16,7 @@ const state = {
   /** @type {{id:number, file:File, exif:any, error:string|null, url:string}[]} */
   photos: [],
   rows: [],
+  units: loadUnits(),
 };
 let photoId = 0;
 
@@ -29,6 +31,30 @@ for (let m = -12 * 60; m <= 14 * 60; m += 15) {
   opt.value = String(m);
   opt.textContent = `UTC${formatOffset(m)}`;
   tzSelect.append(opt);
+}
+
+// Display units (page only; EXIF is always metric). Remembered per browser.
+for (const radio of document.querySelectorAll('input[name=units]')) {
+  radio.checked = radio.value === state.units;
+  radio.addEventListener('change', () => {
+    state.units = radio.value;
+    try {
+      localStorage.setItem('units', state.units);
+    } catch {
+      /* storage unavailable: keep the choice for this visit only */
+    }
+    render();
+  });
+}
+
+function loadUnits() {
+  try {
+    const saved = localStorage.getItem('units');
+    if (saved === 'metric' || saved === 'statute') return saved;
+  } catch {
+    /* ignore */
+  }
+  return defaultUnits(navigator.language);
 }
 
 setupDropzone('#log-drop', '#log-input', addLogs);
@@ -247,12 +273,12 @@ function renderDives() {
           <strong>${esc(fmtDiveTime(d.startTime, d.utcOffsetMinutes))}</strong>
           <span class="muted">${esc(fmtZone(d.utcOffsetMinutes))}</span>
           <span>${Math.round((d.endTime - d.startTime) / 60000)} min</span>
-          <span>max ${d.maxDepth?.toFixed(1) ?? '–'} m</span>
-          <span>${d.minTemperature ?? '–'} °C</span>
+          <span>max ${formatDepth(d.maxDepth, state.units)}</span>
+          <span>${formatTemperature(d.minTemperature, state.units, 0)}</span>
           <span>${esc(pos)}</span>
           <span class="muted">${photos} photo(s) · ${esc(d.fileName)}</span>
         </header>
-        ${profileSvg(d, byDive.get(d))}
+        ${profileSvg(d, byDive.get(d), state.units)}
       </article>`;
     })
     .join('');
@@ -275,8 +301,8 @@ function renderTable() {
             : '–'
         }</td>
         <td>${m ? esc(fmtDiveTime(m.dive.startTime, m.dive.utcOffsetMinutes, { timeStyle: 'short' })) : '–'}</td>
-        <td>${m?.depth != null ? m.depth.toFixed(1) + ' m' : '–'}</td>
-        <td>${m?.temperature != null ? m.temperature.toFixed(1) + ' °C' : '–'}</td>
+        <td>${formatDepth(m?.depth, state.units)}</td>
+        <td>${formatTemperature(m?.temperature, state.units)}</td>
         <td>${pos}</td>
         <td><span class="badge">${r.status}</span> <small>${esc(r.note)}</small></td>
       </tr>`;

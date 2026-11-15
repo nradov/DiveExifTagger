@@ -6,6 +6,7 @@ import { parseDiveLog, parseDiveLogFile, findParser } from '../src/formats/index
 import { readExif, writeExif, parseExifOffset } from '../src/exif/jpeg-exif.js';
 import { photoTime, matchPhoto, interpolate } from '../src/match.js';
 import { zipSync } from 'fflate';
+import { defaultUnits, formatDepth, formatTemperature } from '../src/ui/units.js';
 import { buildDiveFit, FitWriter, toFitTime } from './helpers/fit-writer.js';
 import { Decoder, Stream } from '@garmin/fitsdk';
 import { buildJpeg, MAKER_NOTE_MAGIC } from './helpers/jpeg-builder.js';
@@ -213,6 +214,23 @@ test('interpolate skips missing values', () => {
   ];
   assert.equal(interpolate(s, 10, 'depth'), 5);
   assert.equal(interpolate(s, -5, 'depth'), 0);
+});
+
+// ------------------------------------------------------------------ display units
+
+test('display units: conversions, formatting and locale defaults', () => {
+  assert.equal(formatDepth(43.593, 'metric'), '43.6 m');
+  assert.equal(formatDepth(43.593, 'statute'), '143 ft');
+  assert.equal(formatDepth(30.48, 'statute'), '100 ft');
+  assert.equal(formatTemperature(20, 'metric'), '20.0 °C');
+  assert.equal(formatTemperature(20, 'statute'), '68 °F');
+  assert.equal(formatTemperature(-2, 'statute'), '28 °F');
+  assert.equal(formatDepth(null, 'statute'), '–');
+  assert.equal(defaultUnits('en-US'), 'statute');
+  assert.equal(defaultUnits('en'), 'statute'); // maximizes to en-Latn-US
+  assert.equal(defaultUnits('en-GB'), 'metric');
+  assert.equal(defaultUnits('de-DE'), 'metric');
+  assert.equal(defaultUnits('not a locale'), 'metric');
 });
 
 function indexOf(hay, needle) {

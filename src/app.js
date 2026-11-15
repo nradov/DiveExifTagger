@@ -125,9 +125,12 @@ function clearAll() {
 
 function readSettings() {
   const f = $('#settings').elements;
+  const manualMode = f.locationMode.value === 'manual';
+  // Latitude/longitude are only editable (and only used) in manual mode.
+  f.manualLat.disabled = f.manualLon.disabled = !manualMode;
   const lat = parseFloat(f.manualLat.value);
   const lon = parseFloat(f.manualLon.value);
-  const manual = Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180;
+  const manual = manualMode && Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180;
   return {
     cameraUtcOffsetMinutes: parseInt(f.cameraUtcOffsetMinutes.value, 10) || 0,
     clockCorrectionSeconds: parseCorrection(f.clockCorrection.value),
@@ -202,7 +205,7 @@ function computeRows(s) {
     const tags = tagsFor(row, s);
     if (!Object.keys(tags).some((k) => k !== 'time' && k !== 'processingMethod'))
       return { ...row, status: 'skip', note: 'Nothing to write' };
-    if (row.match.lat === null && s.writePosition) row.note = 'No position (add a fallback)';
+    if (row.match.lat === null && s.writePosition) row.note = 'No GPS position in dive log (use a manual position)';
     else if (row.match.phase !== 'underwater') row.note = `Surface, ${row.match.phase} dive`;
     return row;
   });

@@ -4,6 +4,8 @@ Geotag underwater photos with **location, depth and water temperature** from you
 dive computer's log, entirely in your web browser. No uploads, no server, no
 install.
 
+**▶ Use it here: <https://nradov.github.io/DiveExifTagger/>**
+
 1. Drop in one or more dive logs (currently **Garmin FIT**, e.g. Descent series),
    either as `.fit` files or as the `.zip` you get when exporting from Garmin Connect.
 2. Drop in your JPEG photos.

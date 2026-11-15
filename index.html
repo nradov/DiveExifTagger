@@ -96,14 +96,14 @@
             <div class="row">
               <label>
                 Latitude
-                <input name="manualLat" type="number" step="any" min="-90" max="90" placeholder="-16.5000" />
+                <input name="manualLat" type="number" disabled step="any" min="-90" max="90" placeholder="-16.5000" />
               </label>
               <label>
                 Longitude
-                <input name="manualLon" type="number" step="any" min="-180" max="180" placeholder="145.7500" />
+                <input name="manualLon" type="number" disabled step="any" min="-180" max="180" placeholder="145.7500" />
               </label>
             </div>
-            <small>Manual position, also used as a fallback for dives recorded without GPS.</small>
+            <small>Enabled when "Position to use" is set to manual. Use it for dives recorded without GPS.</small>
             <label>
               Match photos up to
               <input name="toleranceMinutes" type="number" min="0" max="720" value="30" class="short" />

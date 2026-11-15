@@ -1,4 +1,4 @@
-# Dive Geotagger
+# DiveExifTagger
 
 Geotag underwater photos with **location, depth and water temperature** from your
 dive computer's log, entirely in your web browser. No uploads, no server, no
@@ -33,7 +33,7 @@ and re-pointed.
 ## Getting camera time right
 
 Cameras store local wall-clock time with no time zone, and their clocks drift.
-Dive Geotagger converts photo times to UTC using:
+DiveExifTagger converts photo times to UTC using:
 
 - the photo's `OffsetTimeOriginal` tag, if the camera wrote one, otherwise
 - the **camera time zone** setting (defaulted to the zone the dive computer

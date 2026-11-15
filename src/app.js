@@ -43,6 +43,13 @@ $('#clear').addEventListener('click', clearAll);
 $('#sync-apply').addEventListener('click', applySync);
 if ('showDirectoryPicker' in window) $('#save-folder').hidden = false;
 
+// On GitHub Pages (https://<user>.github.io/<repo>/), point the footer at the source repo.
+{
+  const m = /^([a-z0-9-]+)\.github\.io$/i.exec(location.hostname);
+  const repo = location.pathname.split('/').filter(Boolean)[0];
+  if (m && repo) $('#repo-link').href = `https://github.com/${m[1]}/${repo}`;
+}
+
 function setupDropzone(zoneSel, inputSel, handler) {
   const zone = $(zoneSel);
   const input = $(inputSel);

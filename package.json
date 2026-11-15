@@ -1,5 +1,5 @@
 {
-  "name": "dive-geotagger",
+  "name": "dive-exif-tagger",
   "version": "0.1.0",
   "description": "Geotag underwater photos with location, depth and temperature from dive computer logs. Runs entirely in the browser.",
   "type": "module",

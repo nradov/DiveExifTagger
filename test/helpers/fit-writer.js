@@ -2,7 +2,8 @@
  * Tiny FIT encoder used only to build test fixtures.
  * Supports little-endian definitions and the base types used by the tests.
  */
-import { FIT_EPOCH_OFFSET } from '../../src/formats/fit/decoder.js';
+/** Seconds between the Unix epoch and the FIT epoch (1989-12-31T00:00:00Z). */
+const FIT_EPOCH_OFFSET = 631065600;
 
 const TYPES = {
   enum: [0x00, 1, 'setUint8'],

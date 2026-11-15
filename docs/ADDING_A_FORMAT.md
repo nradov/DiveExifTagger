@@ -74,7 +74,10 @@ automatically.
 
 ## 3. Test it
 
-Add a test in `test/` (see `test/core.test.js`). Prefer generating small
+Add a test in `test/` (see `test/core.test.js`). If your parser needs a
+third-party module, add it to the import map in `index.html` and to
+`devDependencies` in `package.json` so the browser and the tests resolve the
+same bare specifier. Prefer generating small
 fixtures in code (like `test/helpers/fit-writer.js`) or committing a tiny,
 anonymised sample file under `test/fixtures/`. Please strip or fuzz real GPS
 coordinates from shared sample logs if they are private.

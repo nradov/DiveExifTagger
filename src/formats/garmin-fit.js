@@ -1,108 +1,114 @@
 /**
  * Dive log format adapter: Garmin FIT (Descent series and other Garmin
- * watches that record dive activities).
+ * watches that record dive activities), decoded with Garmin's official
+ * FIT JavaScript SDK (@garmin/fitsdk).
  *
- * Message / field numbers come from the FIT SDK Profile.xlsx.
+ * In the browser, the bare "@garmin/fitsdk" specifier is resolved by the
+ * import map in index.html. In Node (tests), it resolves from node_modules.
+ *
+ * Note: the FIT SDK is distributed under Garmin's FIT Protocol License,
+ * not under this project's MIT license.
  */
-import { decodeFit, isFit, FIT_EPOCH_OFFSET, TIMESTAMP_FIELD } from './fit/decoder.js';
+import { Decoder, Stream } from '@garmin/fitsdk';
 import { makeDive, isNum } from '../model.js';
 
-const MSG = {
-  FILE_ID: 0,
-  SESSION: 18,
-  LAP: 19,
-  RECORD: 20,
-  DEVICE_INFO: 23,
-  ACTIVITY: 34,
-};
+// Global message numbers (FIT Profile). Messages are collected by number via
+// the decoder's mesgListener so we don't depend on dictionary key names.
+const MESG = { FILE_ID: 0, SESSION: 18, LAP: 19, RECORD: 20, ACTIVITY: 34 };
 
-// file_id fields
-const FILE_ID = { MANUFACTURER: 1, PRODUCT: 2, PRODUCT_NAME: 8 };
-// session fields
-const SESSION = {
-  START_TIME: 2,
-  START_LAT: 3,
-  START_LON: 4,
-  SPORT: 5,
-  TOTAL_ELAPSED: 7, // s * 1000
-  END_LAT: 38,
-  END_LON: 39,
-};
-// lap fields
-const LAP = { START_TIME: 2, START_LAT: 3, START_LON: 4, END_LAT: 5, END_LON: 6 };
-// record fields
-const RECORD = { LAT: 0, LON: 1, TEMPERATURE: 13, DEPTH: 92 /* m * 1000 */ };
-// activity fields
-const ACTIVITY = { LOCAL_TIMESTAMP: 5 };
-
+const FIT_EPOCH_MS = 631065600000;
 const SEMICIRCLE_TO_DEG = 180 / 2 ** 31;
-const GARMIN_MANUFACTURER = 1;
 
 export default {
   id: 'garmin-fit',
   name: 'Garmin FIT',
   extensions: ['.fit'],
-  /** Cheap check used to pick a parser when the extension is ambiguous. */
-  sniff: (bytes) => isFit(bytes),
+  sniff: (bytes) => Decoder.isFIT(Stream.fromByteArray(bytes)),
   parse,
 };
 
 /**
- * @param {ArrayBuffer|Uint8Array} bytes
+ * @param {Uint8Array|ArrayBuffer} input
  * @param {{fileName?: string}} [opts]
  * @returns {import('../model.js').Dive[]}
  */
-export function parse(bytes, { fileName = '' } = {}) {
-  const { messages } = decodeFit(bytes);
-  const by = (num) => messages.filter((m) => m.num === num).map((m) => m.fields);
+export function parse(input, { fileName = '' } = {}) {
+  const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
+  const decoder = new Decoder(Stream.fromByteArray(bytes));
+  if (!decoder.isFIT()) throw new Error('Not a FIT file');
+  const intact = decoder.checkIntegrity();
 
-  const fileId = by(MSG.FILE_ID)[0] || {};
-  const device =
-    fileId[FILE_ID.PRODUCT_NAME] ||
-    (fileId[FILE_ID.MANUFACTURER] === GARMIN_MANUFACTURER ? 'Garmin' : null);
+  const byNum = new Map();
+  const { errors } = decoder.read({
+    applyScaleAndOffset: true, // depth in m, elapsed time in s
+    convertTypesToStrings: true,
+    convertDateTimesToDates: true,
+    expandComponents: true,
+    expandSubFields: true,
+    mesgListener: (num, mesg) => {
+      if (!byNum.has(num)) byNum.set(num, []);
+      byNum.get(num).push(mesg);
+    },
+  });
+  const get = (num) => byNum.get(num) || [];
 
-  const activity = by(MSG.ACTIVITY)[0];
-  let utcOffsetMinutes = null;
-  if (activity && isNum(activity[ACTIVITY.LOCAL_TIMESTAMP]) && isNum(activity[TIMESTAMP_FIELD])) {
-    const diff = activity[ACTIVITY.LOCAL_TIMESTAMP] - activity[TIMESTAMP_FIELD];
-    utcOffsetMinutes = Math.round(diff / 900) * 15; // time zones are multiples of 15 min
-  }
-
-  const records = by(MSG.RECORD)
-    .filter((r) => isNum(r[TIMESTAMP_FIELD]))
+  const records = get(MESG.RECORD)
+    .filter((r) => r.timestamp != null)
     .map((r) => ({
-      time: fitTime(r[TIMESTAMP_FIELD]),
-      depth: isNum(r[RECORD.DEPTH]) ? r[RECORD.DEPTH] / 1000 : null,
-      temperature: isNum(r[RECORD.TEMPERATURE]) ? r[RECORD.TEMPERATURE] : null,
-      lat: semi(r[RECORD.LAT]),
-      lon: semi(r[RECORD.LON]),
+      time: toMs(r.timestamp),
+      depth: num(r.depth),
+      temperature: num(r.temperature),
+      lat: semi(r.positionLat),
+      lon: semi(r.positionLong),
     }))
+    .filter((r) => isNum(r.time))
     .sort((a, b) => a.time - b.time);
 
-  const laps = by(MSG.LAP);
-  let sessions = by(MSG.SESSION).filter((s) => isNum(s[SESSION.START_TIME]));
+  if (!records.length && !get(MESG.SESSION).length) {
+    const why = errors?.[0]?.message || (intact ? 'no dive data found' : 'file is corrupt or truncated');
+    throw new Error(why);
+  }
 
-  // No session messages (e.g. a truncated file): treat all records as one dive.
+  const fileId = get(MESG.FILE_ID)[0] || {};
+  const device =
+    fileId.productName ||
+    (fileId.manufacturer === 'garmin' && typeof fileId.garminProduct === 'string'
+      ? `Garmin ${fileId.garminProduct}`
+      : fileId.manufacturer === 'garmin'
+        ? 'Garmin'
+        : null);
+
+  // activity.localTimestamp − activity.timestamp = the watch's UTC offset
+  const activity = get(MESG.ACTIVITY)[0];
+  let utcOffsetMinutes = null;
+  if (activity && activity.localTimestamp != null && activity.timestamp != null) {
+    const diffSec = (toMs(activity.localTimestamp) - toMs(activity.timestamp)) / 1000;
+    if (isNum(diffSec)) utcOffsetMinutes = Math.round(diffSec / 900) * 15;
+  }
+
+  const laps = get(MESG.LAP);
+  const sessions = get(MESG.SESSION)
+    .filter((s) => s.startTime != null)
+    .sort((a, b) => toMs(a.startTime) - toMs(b.startTime));
+
+  // No session messages (e.g. the watch crashed mid-dive): one dive from records.
   if (!sessions.length) {
-    if (!records.length) return [];
     return [makeDive({ source: 'garmin-fit', fileName, device, utcOffsetMinutes, samples: records })];
   }
 
-  sessions = sessions.sort((a, b) => a[SESSION.START_TIME] - b[SESSION.START_TIME]);
-
   return sessions.map((s, i) => {
-    const start = fitTime(s[SESSION.START_TIME]);
-    let end = isNum(s[SESSION.TOTAL_ELAPSED])
-      ? start + s[SESSION.TOTAL_ELAPSED]
-      : isNum(s[TIMESTAMP_FIELD])
-        ? fitTime(s[TIMESTAMP_FIELD])
+    const start = toMs(s.startTime);
+    let end = isNum(s.totalElapsedTime)
+      ? start + s.totalElapsedTime * 1000
+      : s.timestamp != null
+        ? toMs(s.timestamp)
         : null;
-    const nextStart = sessions[i + 1] ? fitTime(sessions[i + 1][SESSION.START_TIME]) : Infinity;
+    const nextStart = sessions[i + 1] ? toMs(sessions[i + 1].startTime) : Infinity;
     const samples = records.filter((r) => r.time >= start && r.time < Math.min(nextStart, (end ?? Infinity) + 1));
     if (end === null) end = samples.length ? samples[samples.length - 1].time : start;
 
     const sessionLaps = laps.filter((l) => {
-      const t = isNum(l[LAP.START_TIME]) ? fitTime(l[LAP.START_TIME]) : NaN;
+      const t = l.startTime != null ? toMs(l.startTime) : NaN;
       return t >= start && t <= end;
     });
     const firstLap = sessionLaps[0] || {};
@@ -111,12 +117,12 @@ export function parse(bytes, { fileName = '' } = {}) {
     const lastFix = [...samples].reverse().find((r) => r.lat !== null);
 
     const entry =
-      pos(s[SESSION.START_LAT], s[SESSION.START_LON]) ||
-      pos(firstLap[LAP.START_LAT], firstLap[LAP.START_LON]) ||
+      pos(s.startPositionLat, s.startPositionLong) ||
+      pos(firstLap.startPositionLat, firstLap.startPositionLong) ||
       (firstFix && { lat: firstFix.lat, lon: firstFix.lon });
     const exit =
-      pos(s[SESSION.END_LAT], s[SESSION.END_LON]) ||
-      pos(lastLap[LAP.END_LAT], lastLap[LAP.END_LON]) ||
+      pos(s.endPositionLat, s.endPositionLong) ||
+      pos(lastLap.endPositionLat, lastLap.endPositionLong) ||
       (lastFix && { lat: lastFix.lat, lon: lastFix.lon });
 
     return makeDive({
@@ -133,8 +139,15 @@ export function parse(bytes, { fileName = '' } = {}) {
   });
 }
 
-function fitTime(t) {
-  return (t + FIT_EPOCH_OFFSET) * 1000;
+/** Date (date_time fields) or raw FIT seconds (e.g. local_date_time) → Unix ms. */
+function toMs(v) {
+  if (v instanceof Date) return v.getTime();
+  if (isNum(v)) return v * 1000 + FIT_EPOCH_MS;
+  return NaN;
+}
+
+function num(v) {
+  return isNum(v) ? v : null;
 }
 
 function semi(v) {

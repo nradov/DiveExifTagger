@@ -50,12 +50,14 @@ npm start            # python3 -m http.server 8080
 # or: npx serve .
 ```
 
-Then open <http://localhost:8080>. (Opening `index.html` directly from disk
+Then open <http://localhost:8080> (needs internet access the first time to load
+the FIT SDK from jsDelivr). (Opening `index.html` directly from disk
 won't work because browsers block ES modules on `file://`.)
 
-Run the tests (Node 20+, no dependencies to install):
+Run the tests (Node 20+):
 
 ```sh
+npm install   # installs @garmin/fitsdk (dev dependency)
 npm test
 ```
 
@@ -74,8 +76,7 @@ src/app.js               UI controller
 src/model.js             format-neutral Dive / Sample model
 src/match.js             photo ↔ dive matching and interpolation
 src/formats/index.js     dive log parser registry
-src/formats/garmin-fit.js   Garmin FIT → Dive adapter
-src/formats/fit/decoder.js  generic FIT binary decoder
+src/formats/garmin-fit.js   Garmin FIT → Dive adapter (uses @garmin/fitsdk)
 src/exif/jpeg-exif.js    JPEG EXIF reader/writer
 src/zip.js               tiny ZIP writer
 src/ui/profile.js        SVG depth profile
@@ -83,8 +84,25 @@ test/                    node:test suite and fixture builders
 docs/ADDING_A_FORMAT.md  how to add another dive log format
 ```
 
-Design principles: plain ES modules, zero runtime dependencies, and everything
-runs client-side.
+Design principles: plain ES modules, no build step, and everything runs
+client-side.
+
+## Garmin FIT SDK
+
+FIT files are decoded with Garmin's official
+[FIT JavaScript SDK](https://developer.garmin.com/fit/overview/)
+([`@garmin/fitsdk`](https://www.npmjs.com/package/@garmin/fitsdk)).
+
+- **In the browser** it is loaded from jsDelivr through the import map in
+  `index.html` (major version 21). Photos and logs still never leave the
+  device; only the SDK code is downloaded.
+- **In Node** (tests) it is a dev dependency: run `npm install` first.
+
+The SDK is distributed under Garmin's
+[FIT Protocol License](https://developer.garmin.com/fit/download/), not under
+this project's MIT license, and is not included in this repository. Anyone
+redistributing or self-hosting it is responsible for complying with that
+license.
 
 ## Adding dive log formats
 
@@ -101,7 +119,7 @@ MacDive and DL7.
 - Map view for choosing / adjusting dive site positions
 - Per-dive position overrides and per-photo manual adjustments
 - ZIP64 for exports over 4 GB
-- Offline support (service worker / installable PWA)
+- Offline support (service worker / installable PWA), optionally self-hosting the FIT SDK
 
 ## License
 

@@ -12,5 +12,16 @@
   "engines": {
     "node": ">=20"
   },
-  "keywords": ["scuba", "diving", "geotag", "exif", "garmin", "fit", "underwater-photography"]
+  "keywords": [
+    "scuba",
+    "diving",
+    "geotag",
+    "exif",
+    "garmin",
+    "fit",
+    "underwater-photography"
+  ],
+  "devDependencies": {
+    "@garmin/fitsdk": "^21.141.0"
+  }
 }

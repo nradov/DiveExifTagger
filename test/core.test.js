@@ -1,12 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { decodeFit } from '../src/formats/fit/decoder.js';
 import { parseDiveLog, findParser } from '../src/formats/index.js';
 import { readExif, writeExif, parseExifOffset } from '../src/exif/jpeg-exif.js';
 import { photoUtcTime, matchPhoto, interpolate } from '../src/match.js';
 import { createZip } from '../src/zip.js';
 import { buildDiveFit, FitWriter, toFitTime } from './helpers/fit-writer.js';
+import { Decoder, Stream } from '@garmin/fitsdk';
 import { buildJpeg, MAKER_NOTE_MAGIC } from './helpers/jpeg-builder.js';
 
 const near = (a, b, eps = 1e-6) => assert.ok(Math.abs(a - b) <= eps, `${a} ≉ ${b}`);
@@ -30,16 +30,17 @@ test('FIT: parses a Garmin dive into the dive model', () => {
   assert.equal(d.samples.length, 241);
 });
 
-test('FIT: compressed timestamp headers', () => {
+test('FIT: fixture files are valid for the official SDK (header + CRC)', () => {
   const w = new FitWriter();
-  const t0 = toFitTime(Date.UTC(2026, 0, 1)) & ~0x1f; // aligned
+  const t0 = toFitTime(Date.UTC(2026, 0, 1)) & ~0x1f;
   w.message(20, [[253, 'uint32', t0 + 30]]);
-  // compressed record with offset 2 → rolls over to t0 + 32 + 2
-  w.compressed(20, [[92, 'uint32', 5000]], 2);
-  const { messages } = decodeFit(w.build());
-  const recs = messages.filter((m) => m.num === 20);
-  assert.equal(recs.at(-1).fields[253], t0 + 34);
-  assert.equal(recs.at(-1).fields[92], 5000);
+  w.compressed(20, [[92, 'uint32', 5000]], 2); // compressed timestamp header
+  const decoder = new Decoder(Stream.fromByteArray(w.build()));
+  assert.equal(decoder.isFIT(), true);
+  assert.equal(decoder.checkIntegrity(), true);
+  const records = [];
+  decoder.read({ mesgListener: (num, m) => num === 20 && records.push(m) });
+  assert.equal(records.at(-1).depth, 5);
 });
 
 test('FIT: rejects non-FIT data', () => {

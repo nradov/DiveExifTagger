@@ -7,6 +7,14 @@
     <meta name="description" content="Geotag underwater photos with location, depth and temperature from your dive computer log. Runs entirely in your browser." />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤿</text></svg>" />
     <link rel="stylesheet" href="css/style.css" />
+    <!--
+      Garmin's official FIT JavaScript SDK, loaded as an ES module from jsDelivr.
+      Pinned to major version 21 so new device/profile updates are picked up.
+      The SDK is licensed separately under Garmin's FIT Protocol License.
+    -->
+    <script type="importmap">
+      { "imports": { "@garmin/fitsdk": "https://cdn.jsdelivr.net/npm/@garmin/fitsdk@21/+esm" } }
+    </script>
   </head>
   <body>
     <header class="site-header">
@@ -154,6 +162,7 @@
       <p>
         Open source under the MIT license ·
         <a href="https://github.com/OWNER/dive-geotagger" id="repo-link">Source on GitHub</a> ·
+        FIT decoding by the <a href="https://developer.garmin.com/fit/overview/">Garmin FIT SDK</a> (FIT Protocol License) ·
         Contributions for other dive computer formats welcome.
       </p>
     </footer>

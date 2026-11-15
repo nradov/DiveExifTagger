@@ -16,6 +16,11 @@ Your original files are never modified.
 
 ## What gets written
 
+Tags follow the Exif standard, published by CIPA as
+[CIPA DC-008](https://www.cipa.jp/e/std/std-sec.html); the latest edition is
+[Exif 3.1 (DC-008-2026)](https://www.cipa.jp/std/documents/download_e.html?CIPA_DC-008-2026-E).
+`WaterDepth` and `Temperature` were added in Exif 2.31.
+
 | Data | EXIF tag(s) | Notes |
 | --- | --- | --- |
 | Position | `GPSLatitude`, `GPSLongitude` (+ refs), `GPSMapDatum` | Dive computers can't get a GPS fix underwater, so the position comes from the dive's entry point, exit point, a time-based interpolation between them, or a manual position. |
@@ -70,6 +75,9 @@ Run the tests (Node 22+):
 npm install   # installs the dependencies used by the tests
 npm test
 ```
+
+Besides generated test data, the tests run against a real Garmin Descent dive
+log and photos from an OM System TG-7 in [`test/fixtures/`](test/fixtures/).
 
 ## Deploying
 

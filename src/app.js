@@ -5,7 +5,7 @@
 import { PARSERS, ACCEPTED_EXTENSIONS, parseDiveLogFile } from './formats/index.js';
 import { readExif, writeExif, parseExifDate } from './exif/jpeg-exif.js';
 import { photoUtcTime, matchPhoto } from './match.js';
-import { createZip } from './zip.js';
+import { zipSync } from 'fflate';
 import { profileSvg } from './ui/profile.js';
 
 const $ = (sel) => document.querySelector(sel);
@@ -313,7 +313,9 @@ async function saveZip() {
     const files = [];
     for await (const f of taggedFiles()) files.push(f);
     if (!files.length) return;
-    const blob = new Blob([createZip(files)], { type: 'application/zip' });
+    // level 0 = store: JPEGs are already compressed
+    const zip = zipSync(Object.fromEntries(files.map((f) => [f.name, [f.data, { level: 0, mtime: f.date }]])));
+    const blob = new Blob([zip], { type: 'application/zip' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `geotagged-${new Date().toISOString().slice(0, 10)}.zip`;

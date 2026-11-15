@@ -21,7 +21,8 @@
     "fit",
     "underwater-photography"
   ],
-  "devDependencies": {
-    "@garmin/fitsdk": "^21.141.0"
+  "dependencies": {
+    "@garmin/fitsdk": "^21.141.0",
+    "fflate": "^0.8.3"
   }
 }

@@ -6,8 +6,8 @@ Thanks for helping! Bug reports, sample dive logs and new format parsers are all
 
 - **Client-side only.** Everything must run in the browser; no servers, no uploads.
 - **No build step.** Plain ES modules served as-is. Third-party modules are
-  loaded through the import map in `index.html` (currently only Garmin's FIT
-  SDK) and listed in `package.json` so tests can use them. Discuss new
+  loaded through the import map in `index.html` (Garmin's FIT SDK and fflate)
+  and listed in `package.json` so tests can use them. Discuss new
   dependencies in an issue first.
 - **Never damage photos.** Changes to `src/exif/` must keep existing metadata
   intact and leave image data untouched. Add a test for any new tag.
@@ -16,7 +16,7 @@ Thanks for helping! Bug reports, sample dive logs and new format parsers are all
 
 ```sh
 npm start   # serve at http://localhost:8080
-npm install # once: installs the FIT SDK for tests
+npm install # once: installs the FIT SDK and fflate for tests
 npm test    # node --test, Node 22+
 ```
 

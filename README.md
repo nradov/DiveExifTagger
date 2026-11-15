@@ -60,7 +60,7 @@ won't work because browsers block ES modules on `file://`.)
 Run the tests (Node 22+):
 
 ```sh
-npm install   # installs @garmin/fitsdk (dev dependency)
+npm install   # installs the dependencies used by the tests
 npm test
 ```
 
@@ -81,7 +81,6 @@ src/match.js             photo ↔ dive matching and interpolation
 src/formats/index.js     dive log parser registry
 src/formats/garmin-fit.js   Garmin FIT → Dive adapter (uses @garmin/fitsdk)
 src/exif/jpeg-exif.js    JPEG EXIF reader/writer
-src/zip.js               tiny ZIP reader (for log archives) and writer (for exports)
 src/ui/profile.js        SVG depth profile
 test/                    node:test suite and fixture builders
 docs/ADDING_A_FORMAT.md  how to add another dive log format
@@ -90,16 +89,26 @@ docs/ADDING_A_FORMAT.md  how to add another dive log format
 Design principles: plain ES modules, no build step, and everything runs
 client-side.
 
-## Garmin FIT SDK
+## Dependencies
+
+| Library | Used for | License |
+| --- | --- | --- |
+| [`@garmin/fitsdk`](https://www.npmjs.com/package/@garmin/fitsdk) | Decoding FIT dive logs | Garmin FIT Protocol License |
+| [`fflate`](https://github.com/101arrowz/fflate) | Unpacking `.zip` dive logs, building the `.zip` download | MIT |
+
+Both are loaded from jsDelivr through the import map in `index.html`, and
+installed from npm (`npm install`) for the tests. Photos and logs never leave
+the device; only library code is downloaded.
+
+JPEG/EXIF reading and writing is this project's own code (`src/exif/`): the
+available JavaScript EXIF writers can't write the Exif 2.31 `WaterDepth` and
+`Temperature` tags and drop camera tags they don't recognise.
+
+### Garmin FIT SDK
 
 FIT files are decoded with Garmin's official
 [FIT JavaScript SDK](https://developer.garmin.com/fit/overview/)
 ([`@garmin/fitsdk`](https://www.npmjs.com/package/@garmin/fitsdk)).
-
-- **In the browser** it is loaded from jsDelivr through the import map in
-  `index.html` (major version 21). Photos and logs still never leave the
-  device; only the SDK code is downloaded.
-- **In Node** (tests) it is a dev dependency: run `npm install` first.
 
 The SDK is distributed under Garmin's
 [FIT Protocol License](https://developer.garmin.com/fit/download/), not under

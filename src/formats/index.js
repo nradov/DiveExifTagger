@@ -13,7 +13,7 @@
  * @property {(bytes: Uint8Array, opts: {fileName: string}) => import('../model.js').Dive[]} parse
  */
 import garminFit from './garmin-fit.js';
-import { isZip, readZip } from '../zip.js';
+import { unzipSync } from 'fflate';
 
 /** @type {DiveLogParser[]} */
 export const PARSERS = [garminFit];
@@ -63,18 +63,20 @@ export function parseDiveLog(fileName, data) {
  */
 export async function parseDiveLogFile(fileName, data) {
   const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
-  if (!isZip(bytes)) return parseDiveLog(fileName, bytes);
+  const isZip = bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 0x03 && bytes[3] === 0x04; // "PK\3\4"
+  if (!isZip) return parseDiveLog(fileName, bytes);
 
-  const entries = (await readZip(bytes)).filter(
-    (e) => !e.name.startsWith('__MACOSX/') && !/(^|\/)\./.test(e.name), // macOS/hidden junk
-  );
+  const entries = unzipSync(bytes, {
+    // skip directories and macOS/hidden junk
+    filter: (f) => !f.name.endsWith('/') && !f.name.startsWith('__MACOSX/') && !/(^|\/)\./.test(f.name),
+  });
   const dives = [];
   let supported = 0;
-  for (const e of entries) {
-    const base = e.name.split('/').pop();
-    if (!findParser(base, e.data)) continue;
+  for (const [name, data] of Object.entries(entries)) {
+    const base = name.split('/').pop();
+    if (!findParser(base, data)) continue;
     supported++;
-    dives.push(...parseDiveLog(`${fileName} › ${base}`, e.data));
+    dives.push(...parseDiveLog(`${fileName} › ${base}`, data));
   }
   if (!supported) throw new Error('ZIP archive contains no supported dive log files');
   return dives;

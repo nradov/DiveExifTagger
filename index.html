@@ -8,12 +8,18 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤿</text></svg>" />
     <link rel="stylesheet" href="css/style.css" />
     <!--
-      Garmin's official FIT JavaScript SDK, loaded as an ES module from jsDelivr.
-      Pinned to major version 21 so new device/profile updates are picked up.
-      The SDK is licensed separately under Garmin's FIT Protocol License.
+      Third-party ES modules from jsDelivr (keep in sync with package.json):
+      - Garmin's official FIT JavaScript SDK, major version 21 so new device/profile
+        updates are picked up. Licensed separately under Garmin's FIT Protocol License.
+      - fflate (MIT) for reading and writing ZIP files.
     -->
     <script type="importmap">
-      { "imports": { "@garmin/fitsdk": "https://cdn.jsdelivr.net/npm/@garmin/fitsdk@21/+esm" } }
+      {
+        "imports": {
+          "@garmin/fitsdk": "https://cdn.jsdelivr.net/npm/@garmin/fitsdk@21/+esm",
+          "fflate": "https://cdn.jsdelivr.net/npm/fflate@0.8.3/+esm"
+        }
+      }
     </script>
   </head>
   <body>

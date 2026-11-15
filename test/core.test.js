@@ -126,6 +126,14 @@ for (const little of [true, false]) {
   });
 }
 
+test('EXIF: keeps existing GPS entries (e.g. compass heading) when adding a position', () => {
+  // Simulate a camera with a compass (e.g. OM System TG-7): GPS IFD holding only a heading.
+  const withHeading = writeExif(buildJpeg(), { altitude: 0 });
+  const out = writeExif(addImgDirection(withHeading, 47), { lat: 36.43, lon: -121.93, waterDepth: 40 });
+  assert.equal(readImgDirection(out), 47);
+  near(readExif(out).gps.lat, 36.43, 1e-9);
+});
+
 test('EXIF: creates an EXIF block when the JPEG has none', () => {
   const jpeg = buildJpeg({ exif: false });
   const out = writeExif(jpeg, { lat: 10.25, lon: -20.5, waterDepth: 5 });
@@ -219,4 +227,46 @@ function indexOf(hay, needle) {
     return i;
   }
   return -1;
+}
+
+// --- helpers for the compass heading test (GPSImgDirection 0x0011, RATIONAL)
+function gpsIfdLocation(jpeg) {
+  const t0 = indexOf(jpeg, [0x45, 0x78, 0x69, 0x66, 0, 0]) + 6;
+  const v = new DataView(jpeg.buffer, jpeg.byteOffset + t0);
+  const le = jpeg[t0] === 0x49;
+  const ifd0 = v.getUint32(4, le);
+  const n = v.getUint16(ifd0, le);
+  for (let i = 0; i < n; i++) {
+    const p = ifd0 + 2 + i * 12;
+    if (v.getUint16(p, le) === 0x8825) return { v, le, gps: v.getUint32(p + 8, le), t0 };
+  }
+  return null;
+}
+function addImgDirection(jpeg, deg) {
+  // Turn the GPSAltitude entry (also a single RATIONAL) into GPSImgDirection in place.
+  const out = jpeg.slice();
+  const { v, le, gps } = gpsIfdLocation(out);
+  const n = v.getUint16(gps, le);
+  for (let i = 0; i < n; i++) {
+    const p = gps + 2 + i * 12;
+    if (v.getUint16(p, le) === 0x0006) {
+      v.setUint16(p, 0x0011, le);
+      const at = v.getUint32(p + 8, le);
+      v.setUint32(at, deg, le);
+      v.setUint32(at + 4, 1, le);
+    }
+  }
+  return out;
+}
+function readImgDirection(jpeg) {
+  const { v, le, gps } = gpsIfdLocation(jpeg);
+  const n = v.getUint16(gps, le);
+  for (let i = 0; i < n; i++) {
+    const p = gps + 2 + i * 12;
+    if (v.getUint16(p, le) === 0x0011) {
+      const at = v.getUint32(p + 8, le);
+      return v.getUint32(at, le) / v.getUint32(at + 4, le);
+    }
+  }
+  return null;
 }

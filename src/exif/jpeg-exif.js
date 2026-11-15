@@ -238,7 +238,8 @@ export function writeExif(input, tags) {
   const i0 = readIfd(base, view, ifd0, little);
   const ifd0Entries = new Map(i0.entries.map((e) => [e.tag, e]));
 
-  // --- GPS IFD (replaced wholesale, it is ours to own)
+  // --- GPS IFD (existing entries such as a camera's compass heading are kept;
+  // the tags we write replace any older values)
   const hasPosition = isNum(tags.lat) && isNum(tags.lon);
   if (hasPosition || isNum(tags.altitude)) {
     const g = [];
@@ -269,7 +270,11 @@ export function writeExif(input, tags) {
       const text = new TextEncoder().encode(tags.processingMethod);
       g.push(newEntry(TAG.GPS_PROCESSING_METHOD, TYPE.UNDEFINED, [...EXIF_ASCII_PREFIX, ...text]));
     }
-    const gpsOffset = w.appendIfd(g, 0);
+    const oldPtrEntry = ifd0Entries.get(TAG.GPS_IFD);
+    const oldPtr = oldPtrEntry ? entryValue(base, view, oldPtrEntry, little) : 0;
+    const merged = new Map(readIfd(base, view, oldPtr, little).entries.map((e) => [e.tag, e]));
+    for (const e of g) merged.set(e.tag, e);
+    const gpsOffset = w.appendIfd([...merged.values()], 0);
     ifd0Entries.set(TAG.GPS_IFD, newEntry(TAG.GPS_IFD, TYPE.LONG, [gpsOffset]));
   }
 

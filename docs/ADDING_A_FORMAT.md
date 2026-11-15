@@ -66,7 +66,7 @@ Add it to `PARSERS` in `src/formats/index.js`:
 
 ```js
 import uddf from './uddf.js';
-export const PARSERS = [garminFit, uddf];
+export const PARSERS = [fit, uddf];
 ```
 
 The file picker's accepted extensions and the "Supported:" hint update

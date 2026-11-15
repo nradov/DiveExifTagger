@@ -6,13 +6,28 @@ install.
 
 **▶ Use it here: <https://nradov.github.io/DiveExifTagger/>**
 
-1. Drop in one or more dive logs (currently **Garmin FIT**, e.g. Descent series),
-   either as `.fit` files or as the `.zip` you get when exporting from Garmin Connect.
+1. Drop in one or more dive logs: **FIT** files from **Garmin** (e.g. Descent
+   series) or **Suunto** (e.g. Ocean), as `.fit` files or as the `.zip` you get
+   when exporting from Garmin Connect. See [Supported dive computers](#supported-dive-computers).
 2. Drop in your JPEG photos.
 3. Check the times. Time zones are detected automatically.
 4. Download the geotagged copies as a ZIP, or save them straight to a folder.
 
 Your original files are never modified.
+
+## Supported dive computers
+
+| Brand | How to get the file | Where the position comes from |
+| --- | --- | --- |
+| **Garmin** (Descent Mk2/Mk3, G1, other Garmin dive watches) | Garmin Connect → activity → ⚙ → *Export Original* (a `.zip` containing a `.fit`; drop the `.zip` in as is) | Entry/exit points recorded by the watch |
+| **Suunto** (Ocean, Nautic and other models that sync to the Suunto app) | Suunto app → dive → *Export* / download as a `.fit` file | GPS fixes the watch recorded at the surface before and after the dive |
+
+Positions are only available if the dive computer itself got a GPS fix. A
+location you set by hand in the Suunto app is not included in its FIT export;
+use the manual position option for those dives.
+
+Suunto support was tested against Suunto Ocean exports (scuba and freediving).
+Other dive log formats can be added; see [Adding dive log formats](#adding-dive-log-formats).
 
 ## What gets written
 
@@ -98,7 +113,7 @@ src/app.js               UI controller
 src/model.js             format-neutral Dive / Sample model
 src/match.js             photo ↔ dive matching and interpolation
 src/formats/index.js     dive log parser registry
-src/formats/garmin-fit.js   Garmin FIT → Dive adapter (uses @garmin/fitsdk)
+src/formats/fit.js       FIT (Garmin, Suunto) → Dive adapter (uses @garmin/fitsdk)
 src/exif/jpeg-exif.js    JPEG EXIF reader/writer
 src/ui/profile.js        SVG depth profile
 test/                    node:test suite and fixture builders
@@ -140,8 +155,14 @@ license.
 Parsers convert a file into the shared `Dive` model, so the rest of the app
 doesn't care where the data came from. See
 [docs/ADDING_A_FORMAT.md](docs/ADDING_A_FORMAT.md). Good candidates:
-Subsurface XML (`.ssrf`), UDDF (`.uddf`), Shearwater, Suunto (`.json`/`.sml`),
-MacDive and DL7.
+Subsurface XML (`.ssrf`), UDDF (`.uddf`), Shearwater, Suunto's older formats
+(`.sml`/`.sde`) and its newer JSON export, MacDive and DL7.
+
+**Shearwater:** Shearwater computers can record dive entry/exit coordinates with
+the Swift GPS transmitter, and libdivecomputer documents how they are stored.
+What's missing is a sample export that contains them. If you dive with a Swift
+GPS, please open an issue and attach a Shearwater export of a dive with GPS
+(UDDF or CSV) plus a screenshot of the coordinates the Shearwater app shows.
 
 ## Roadmap
 

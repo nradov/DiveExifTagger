@@ -21,7 +21,7 @@
  *
  * @typedef {Object} Dive
  * @property {string} id              unique within the session
- * @property {string} source          parser id, e.g. "garmin-fit"
+ * @property {string} source          parser id, e.g. "fit"
  * @property {string} fileName
  * @property {string|null} device     e.g. "Garmin Descent Mk3"
  * @property {number} startTime       UTC ms

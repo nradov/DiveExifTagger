@@ -6,17 +6,17 @@
  * shape below and add it to `PARSERS`. See docs/ADDING_A_FORMAT.md.
  *
  * @typedef {Object} DiveLogParser
- * @property {string} id                 stable identifier, e.g. "garmin-fit"
+ * @property {string} id                 stable identifier, e.g. "fit"
  * @property {string} name               human readable name
  * @property {string[]} extensions       lower-case, with leading dot
  * @property {(bytes: Uint8Array) => boolean} sniff   content check
  * @property {(bytes: Uint8Array, opts: {fileName: string}) => import('../model.js').Dive[]} parse
  */
-import garminFit from './garmin-fit.js';
+import fit from './fit.js';
 import { unzipSync } from 'fflate';
 
 /** @type {DiveLogParser[]} */
-export const PARSERS = [garminFit];
+export const PARSERS = [fit];
 
 /**
  * File extensions accepted by the file picker. ZIP archives (as downloaded

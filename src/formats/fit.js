@@ -1,8 +1,15 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 /**
- * Dive log format adapter: Garmin FIT (Descent series and other Garmin
- * watches that record dive activities), decoded with Garmin's official
- * FIT JavaScript SDK (@garmin/fitsdk).
+ * Dive log format adapter: FIT files from dive computers, decoded with
+ * Garmin's official FIT JavaScript SDK (@garmin/fitsdk).
+ *
+ * Known producers:
+ *  - Garmin Descent series (and other Garmin watches that record dives):
+ *    entry/exit positions in the session (and lap) messages.
+ *  - Suunto (e.g. Ocean, Nautic), exported from the Suunto app: no positions
+ *    in session/lap messages; GPS fixes appear only in record messages while
+ *    at the surface, and the files carry Suunto developer fields (which the
+ *    SDK handles and we ignore). Entry/exit come from the first/last fix.
  *
  * In the browser, the bare "@garmin/fitsdk" specifier is resolved by the
  * import map in index.html. In Node (tests), it resolves from node_modules.
@@ -21,8 +28,8 @@ const FIT_EPOCH_MS = 631065600000;
 const SEMICIRCLE_TO_DEG = 180 / 2 ** 31;
 
 export default {
-  id: 'garmin-fit',
-  name: 'Garmin FIT',
+  id: 'fit',
+  name: 'FIT (Garmin, Suunto)',
   extensions: ['.fit'],
   sniff: (bytes) => Decoder.isFIT(Stream.fromByteArray(bytes)),
   parse,
@@ -71,13 +78,11 @@ export function parse(input, { fileName = '' } = {}) {
   }
 
   const fileId = get(MESG.FILE_ID)[0] || {};
+  // e.g. "Suunto Ocean" (Suunto writes product_name), "Garmin Descent Mk2"
+  const maker = typeof fileId.manufacturer === 'string' ? prettyProduct(fileId.manufacturer) : null;
   const device =
     fileId.productName ||
-    (fileId.manufacturer === 'garmin' && typeof fileId.garminProduct === 'string'
-      ? `Garmin ${prettyProduct(fileId.garminProduct)}`
-      : fileId.manufacturer === 'garmin'
-        ? 'Garmin'
-        : null);
+    (maker && typeof fileId.garminProduct === 'string' ? `${maker} ${prettyProduct(fileId.garminProduct)}` : maker);
 
   // activity.localTimestamp − activity.timestamp = the watch's UTC offset
   const activity = get(MESG.ACTIVITY)[0];
@@ -94,7 +99,7 @@ export function parse(input, { fileName = '' } = {}) {
 
   // No session messages (e.g. the watch crashed mid-dive): one dive from records.
   if (!sessions.length) {
-    return [makeDive({ source: 'garmin-fit', fileName, device, utcOffsetMinutes, samples: records })];
+    return [makeDive({ source: 'fit', fileName, device, utcOffsetMinutes, samples: records })];
   }
 
   return sessions.map((s, i) => {
@@ -127,7 +132,7 @@ export function parse(input, { fileName = '' } = {}) {
       (lastFix && { lat: lastFix.lat, lon: lastFix.lon });
 
     return makeDive({
-      source: 'garmin-fit',
+      source: 'fit',
       fileName: sessions.length > 1 ? `${fileName} #${i + 1}` : fileName,
       device,
       startTime: start,

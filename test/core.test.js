@@ -7,7 +7,7 @@ import { readExif, writeExif, parseExifOffset } from '../src/exif/jpeg-exif.js';
 import { photoTime, matchPhoto, interpolate } from '../src/match.js';
 import { zipSync } from 'fflate';
 import { defaultUnits, formatDepth, formatTemperature } from '../src/ui/units.js';
-import { buildDiveFit, FitWriter, toFitTime } from './helpers/fit-writer.js';
+import { buildDiveFit, buildSuuntoFit, FitWriter, toFitTime } from './helpers/fit-writer.js';
 import { Decoder, Stream } from '@garmin/fitsdk';
 import { buildJpeg, MAKER_NOTE_MAGIC } from './helpers/jpeg-builder.js';
 
@@ -17,7 +17,7 @@ const near = (a, b, eps = 1e-6) => assert.ok(Math.abs(a - b) <= eps, `${a} ≉ $
 
 test('FIT: parses a Garmin dive into the dive model', () => {
   const fit = buildDiveFit();
-  assert.equal(findParser('x.fit', fit.bytes).id, 'garmin-fit');
+  assert.equal(findParser('x.fit', fit.bytes).id, 'fit');
   const dives = parseDiveLog('dive.fit', fit.bytes);
   assert.equal(dives.length, 1);
   const d = dives[0];
@@ -44,6 +44,35 @@ test('FIT: fixture files are valid for the official SDK (header + CRC)', () => {
   const records = [];
   decoder.read({ mesgListener: (num, m) => num === 20 && records.push(m) });
   assert.equal(records.at(-1).depth, 5);
+});
+
+test('FIT: Suunto export (no session positions, surface GPS in records, developer fields)', () => {
+  const fit = buildSuuntoFit();
+
+  // The fixture really has developer fields and decodes cleanly with the SDK.
+  const devFields = [];
+  const decoder = new Decoder(Stream.fromByteArray(fit.bytes));
+  assert.equal(decoder.checkIntegrity(), true);
+  const { errors } = decoder.read({ fieldDescriptionListener: (k, d, fd) => devFields.push(fd.fieldName) });
+  assert.deepEqual(errors, []);
+  assert.deepEqual(devFields, ['max_depth', 'surface_time']);
+
+  const [d] = parseDiveLog('Suunto.fit', fit.bytes);
+  assert.equal(d.device, 'Suunto Ocean');
+  assert.equal(d.utcOffsetMinutes, 480);
+  near(d.maxDepth, 21.7, 1e-3);
+  assert.equal(d.minTemperature, 29);
+  // entry/exit come from the first/last surface fix in the records
+  near(d.entry.lat, fit.entry.lat, 1e-6);
+  near(d.entry.lon, fit.entry.lon, 1e-6);
+  near(d.exit.lat, fit.exit.lat, 1e-6);
+  near(d.exit.lon, fit.exit.lon, 1e-6);
+
+  // A photo 20 minutes in is matched underwater, with the entry position.
+  const m = matchPhoto(fit.start + 20 * 60_000, [d], { toleranceMinutes: 30, locationMode: 'entry', manualPosition: null });
+  assert.equal(m.phase, 'underwater');
+  near(m.depth, 21.7, 1e-3);
+  near(m.lat, fit.entry.lat, 1e-6);
 });
 
 test('FIT: rejects non-FIT data', () => {

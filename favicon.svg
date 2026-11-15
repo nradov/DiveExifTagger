@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>DiveExifTagger</title>
+  <defs>
+    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1c8fc9"/>
+      <stop offset="1" stop-color="#063a5c"/>
+    </linearGradient>
+  </defs>
+  <!-- deep-water tile -->
+  <rect width="64" height="64" rx="14" fill="url(#water)"/>
+  <!-- rising bubbles -->
+  <circle cx="47" cy="13" r="3.2" fill="none" stroke="#fff" stroke-width="2.2" opacity=".9"/>
+  <circle cx="54" cy="6.5" r="2" fill="#fff" opacity=".75"/>
+  <!-- camera body with viewfinder hump -->
+  <path d="M10 26a5 5 0 0 1 5-5h7l3.5-5h13l3.5 5h7a5 5 0 0 1 5 5v21a5 5 0 0 1-5 5H15a5 5 0 0 1-5-5z" fill="#fff"/>
+  <!-- lens -->
+  <circle cx="32" cy="36" r="11" fill="#063a5c"/>
+  <circle cx="32" cy="36" r="7" fill="#1c8fc9"/>
+  <circle cx="29" cy="33" r="2.4" fill="#fff" opacity=".85"/>
+  <!-- strobe -->
+  <rect x="14.5" y="25" width="5" height="3.5" rx="1" fill="#f08a24"/>
+</svg>

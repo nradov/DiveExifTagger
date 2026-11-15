@@ -1,0 +1,6 @@
+node_modules/
+_site/
+.DS_Store
+*.log
+# keep personal dive logs and photos out of the repo
+/samples/

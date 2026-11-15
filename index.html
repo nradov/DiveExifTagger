@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dive Geotagger</title>
+    <meta name="description" content="Geotag underwater photos with location, depth and temperature from your dive computer log. Runs entirely in your browser." />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤿</text></svg>" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="wrap">
+        <h1>Dive Geotagger</h1>
+        <p class="tagline">
+          Add location, depth and water temperature from your dive computer log to your underwater photos.
+          <strong>Everything runs in your browser — no files are uploaded.</strong>
+        </p>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <section class="step" aria-labelledby="step-logs">
+        <h2 id="step-logs"><span class="num">1</span> Dive logs</h2>
+        <label class="dropzone" id="log-drop">
+          <input type="file" id="log-input" multiple hidden />
+          <span class="dz-title">Drop dive log files here, or click to choose</span>
+          <span class="dz-hint" id="log-formats"></span>
+        </label>
+        <div id="dive-list" class="dive-list"></div>
+      </section>
+
+      <section class="step" aria-labelledby="step-photos">
+        <h2 id="step-photos"><span class="num">2</span> Photos</h2>
+        <label class="dropzone" id="photo-drop">
+          <input type="file" id="photo-input" multiple accept=".jpg,.jpeg,image/jpeg" hidden />
+          <span class="dz-title">Drop JPEG photos here, or click to choose</span>
+          <span class="dz-hint">Capture times are read from EXIF DateTimeOriginal</span>
+        </label>
+      </section>
+
+      <section class="step" aria-labelledby="step-settings">
+        <h2 id="step-settings"><span class="num">3</span> Time &amp; location settings</h2>
+        <form id="settings" class="settings" onsubmit="return false">
+          <fieldset>
+            <legend>Camera clock</legend>
+            <label>
+              Camera time zone
+              <select name="cameraUtcOffsetMinutes" id="tz-select"></select>
+            </label>
+            <label>
+              Clock correction
+              <input name="clockCorrection" type="text" value="0" placeholder="e.g. +1:23 or -45" inputmode="text" />
+              <small>Added to camera time. <code>[-]h:mm:ss</code>, <code>m:ss</code> or seconds.</small>
+            </label>
+            <label class="check">
+              <input name="preferOffsetTag" type="checkbox" checked />
+              Use the photo's own time zone tag (OffsetTimeOriginal) when present
+            </label>
+            <details class="sync">
+              <summary>Work out the correction from a photo of your dive computer's screen</summary>
+              <div class="sync-body">
+                <label>
+                  Photo
+                  <select id="sync-photo"></select>
+                </label>
+                <label>
+                  Time shown on the dive computer
+                  <input id="sync-time" type="time" step="1" />
+                </label>
+                <button type="button" id="sync-apply">Calculate correction</button>
+                <small>Assumes the dive computer displays local time for the matched dive.</small>
+              </div>
+            </details>
+          </fieldset>
+
+          <fieldset>
+            <legend>Location</legend>
+            <label>
+              Position to use
+              <select name="locationMode">
+                <option value="entry">Dive entry point</option>
+                <option value="interpolate">Interpolate entry → exit by time</option>
+                <option value="exit">Dive exit point</option>
+                <option value="manual">Manual position for all photos</option>
+              </select>
+            </label>
+            <div class="row">
+              <label>
+                Latitude
+                <input name="manualLat" type="number" step="any" min="-90" max="90" placeholder="-16.5000" />
+              </label>
+              <label>
+                Longitude
+                <input name="manualLon" type="number" step="any" min="-180" max="180" placeholder="145.7500" />
+              </label>
+            </div>
+            <small>Manual position, also used as a fallback for dives recorded without GPS.</small>
+            <label>
+              Match photos up to
+              <input name="toleranceMinutes" type="number" min="0" max="720" value="30" class="short" />
+              minutes before/after a dive (surface shots)
+            </label>
+          </fieldset>
+
+          <fieldset>
+            <legend>What to write</legend>
+            <label class="check"><input name="writePosition" type="checkbox" checked /> GPS latitude/longitude</label>
+            <label class="check">
+              <input name="depthAsAltitude" type="checkbox" checked />
+              Depth as GPS altitude below sea level <small>(shown by most photo apps)</small>
+            </label>
+            <label class="check">
+              <input name="writeDiveTags" type="checkbox" checked />
+              Exif 2.31 WaterDepth and Temperature tags
+            </label>
+            <label class="check">
+              <input name="skipExistingGps" type="checkbox" />
+              Leave photos that already have GPS data unchanged
+            </label>
+          </fieldset>
+        </form>
+      </section>
+
+      <section class="step" aria-labelledby="step-review">
+        <h2 id="step-review"><span class="num">4</span> Review &amp; save</h2>
+        <p id="summary" class="summary">Add dive logs and photos to get started.</p>
+        <div class="actions">
+          <button type="button" id="save-zip" class="primary" disabled>Download geotagged photos (.zip)</button>
+          <button type="button" id="save-folder" disabled hidden>Save to a folder…</button>
+          <button type="button" id="clear" class="ghost">Clear all</button>
+        </div>
+        <div class="table-wrap">
+          <table id="photo-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Photo</th>
+                <th>Taken (UTC)</th>
+                <th>Dive</th>
+                <th>Depth</th>
+                <th>Temp</th>
+                <th>Position</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer class="wrap site-footer">
+      <p>
+        Open source under the MIT license ·
+        <a href="https://github.com/OWNER/dive-geotagger" id="repo-link">Source on GitHub</a> ·
+        Contributions for other dive computer formats welcome.
+      </p>
+    </footer>
+
+    <script type="module" src="src/app.js"></script>
+  </body>
+</html>

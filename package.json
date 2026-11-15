@@ -1,0 +1,16 @@
+{
+  "name": "dive-geotagger",
+  "version": "0.1.0",
+  "description": "Geotag underwater photos with location, depth and temperature from dive computer logs. Runs entirely in the browser.",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test \"test/**/*.test.js\"",
+    "start": "python3 -m http.server 8080"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": ["scuba", "diving", "geotag", "exif", "garmin", "fit", "underwater-photography"]
+}

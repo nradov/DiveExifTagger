@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
 /**
  * Dependency-free JPEG EXIF reader/writer, scoped to what this project needs.
  *

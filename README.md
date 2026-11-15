@@ -101,7 +101,7 @@ FIT files are decoded with Garmin's official
 
 The SDK is distributed under Garmin's
 [FIT Protocol License](https://developer.garmin.com/fit/download/), not under
-this project's MIT license, and is not included in this repository. Anyone
+this project's license, and is not included in this repository. Anyone
 redistributing or self-hosting it is responsible for complying with that
 license.
 
@@ -124,4 +124,15 @@ MacDive and DL7.
 
 ## License
 
-[MIT](LICENSE)
+DiveExifTagger is free software: you can redistribute it and/or modify it under
+the terms of the GNU Lesser General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option) any
+later version. See [COPYING.LESSER](COPYING.LESSER) and [COPYING](COPYING)
+(the GNU General Public License v3, which the LGPL builds on).
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.
+
+The Garmin FIT SDK is not part of this project and is licensed separately by
+Garmin.

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
 /**
  * Renders a small SVG depth profile with markers for matched photos.
  */

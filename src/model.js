@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
 /**
  * The format-neutral dive model. Every dive log parser converts its input
  * into an array of `Dive` objects; nothing downstream (matching, EXIF

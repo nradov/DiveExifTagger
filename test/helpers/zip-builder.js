@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
 /**
  * Builds DEFLATE-compressed ZIPs with data descriptors (general purpose flag
  * bit 3), like many real-world archivers, for testing the ZIP reader.

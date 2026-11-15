@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
 /**
  * Minimal ZIP writer (STORE method, no compression — JPEGs don't compress).
  * Enough to bundle the geotagged photos into one download.

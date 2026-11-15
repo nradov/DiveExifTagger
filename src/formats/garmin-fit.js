@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
 /**
  * Dive log format adapter: Garmin FIT (Descent series and other Garmin
  * watches that record dive activities), decoded with Garmin's official
@@ -7,7 +8,7 @@
  * import map in index.html. In Node (tests), it resolves from node_modules.
  *
  * Note: the FIT SDK is distributed under Garmin's FIT Protocol License,
- * not under this project's MIT license.
+ * not under this project's LGPL license.
  */
 import { Decoder, Stream } from '@garmin/fitsdk';
 import { makeDive, isNum } from '../model.js';

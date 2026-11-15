@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
 /**
  * Tiny FIT encoder used only to build test fixtures.
  * Supports little-endian definitions and the base types used by the tests.

@@ -4,7 +4,7 @@
   "description": "Geotag underwater photos with location, depth and temperature from dive computer logs. Runs entirely in the browser.",
   "type": "module",
   "private": true,
-  "license": "MIT",
+  "license": "LGPL-3.0-or-later",
   "scripts": {
     "test": "node --test \"test/**/*.test.js\"",
     "start": "python3 -m http.server 8080"

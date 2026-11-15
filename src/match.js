@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
 /**
  * Matching photos to dives and interpolating dive data at the photo's time.
  */

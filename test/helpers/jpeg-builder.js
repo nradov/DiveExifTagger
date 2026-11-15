@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
 /**
  * Builds small JPEG-structured files with an EXIF block, for tests.
  * The "image data" is fake; only the segment structure matters here.

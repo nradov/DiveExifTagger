@@ -244,7 +244,8 @@ function renderDives() {
       const photos = byDive.get(d)?.length || 0;
       return `<article class="dive">
         <header>
-          <strong>${esc(fmtLocal(d.startTime, d.utcOffsetMinutes))}</strong>
+          <strong>${esc(fmtDiveTime(d.startTime, d.utcOffsetMinutes))}</strong>
+          <span class="muted">${esc(fmtZone(d.utcOffsetMinutes))}</span>
           <span>${Math.round((d.endTime - d.startTime) / 60000)} min</span>
           <span>max ${d.maxDepth?.toFixed(1) ?? '–'} m</span>
           <span>${d.minTemperature ?? '–'} °C</span>
@@ -273,7 +274,7 @@ function renderTable() {
             ? `${esc(new Date(r.time).toISOString().replace('T', ' ').slice(0, 19))}<br /><small class="muted tz-src">camera on UTC${formatOffset(r.pt.offsetMinutes)}, ${TZ_SOURCE[r.pt.source]}</small>`
             : '–'
         }</td>
-        <td>${m ? esc(fmtLocal(m.dive.startTime, m.dive.utcOffsetMinutes).slice(-5)) : '–'}</td>
+        <td>${m ? esc(fmtDiveTime(m.dive.startTime, m.dive.utcOffsetMinutes, { timeStyle: 'short' })) : '–'}</td>
         <td>${m?.depth != null ? m.depth.toFixed(1) + ' m' : '–'}</td>
         <td>${m?.temperature != null ? m.temperature.toFixed(1) + ' °C' : '–'}</td>
         <td>${pos}</td>
@@ -409,10 +410,19 @@ function formatCorrection(sec) {
   return `${sign}${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-function fmtLocal(t, offsetMinutes) {
-  const off = offsetMinutes ?? 0;
-  const iso = new Date(t + off * 60_000).toISOString();
-  return `${iso.slice(0, 10)} ${iso.slice(11, 16)}`;
+/**
+ * Format a dive time as the dive's local wall-clock time (the dive computer's
+ * UTC offset), using the browser's locale conventions. The offset is applied
+ * by shifting the instant and formatting it as UTC, which works in every
+ * browser regardless of support for offset time zones in Intl.
+ */
+function fmtDiveTime(t, offsetMinutes, style = { dateStyle: 'medium', timeStyle: 'short' }) {
+  const shifted = new Date(t + (offsetMinutes ?? 0) * 60_000);
+  return new Intl.DateTimeFormat(undefined, { ...style, timeZone: 'UTC' }).format(shifted);
+}
+
+function fmtZone(offsetMinutes) {
+  return offsetMinutes == null ? 'UTC' : `UTC${formatOffset(offsetMinutes)}`;
 }
 
 function esc(s) {

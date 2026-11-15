@@ -5,8 +5,24 @@ import { depthValue, UNIT_SYSTEMS } from './units.js';
  * Renders a small SVG depth profile with markers for matched photos.
  */
 const W = 600;
-const H = 110;
-const PAD = { l: 34, r: 8, t: 8, b: 18 };
+const H = 124;
+const PAD = { l: 34, r: 8, t: 8, b: 30 };
+
+/** "Nice" tick spacings for the time axis, in minutes. */
+const TICK_STEPS = [1, 2, 5, 10, 15, 20, 30, 60, 120];
+
+/**
+ * Minute marks for a time axis: the smallest nice spacing that gives at most
+ * `maxTicks` intervals. Returns the minutes to label, starting at 0.
+ * @param {number} durationMinutes
+ * @param {number} [maxTicks]
+ */
+export function minuteTicks(durationMinutes, maxTicks = 8) {
+  const step = TICK_STEPS.find((s) => durationMinutes / s <= maxTicks) ?? Math.ceil(durationMinutes / maxTicks / 60) * 60;
+  const ticks = [];
+  for (let m = 0; m <= durationMinutes + 1e-9; m += step) ticks.push(m);
+  return ticks;
+}
 
 /**
  * @param {import('../model.js').Dive} dive
@@ -35,14 +51,26 @@ export function profileSvg(dive, photoTimes = [], units = 'metric') {
     .join('');
 
   const minutes = Math.round((t1 - t0) / 60000);
+  const bottom = H - PAD.b;
+  const axisY = bottom + 3;
+  const ticks = minuteTicks((t1 - t0) / 60000)
+    .map((m) => {
+      const tx = x(t0 + m * 60000).toFixed(1);
+      // leave room at the right edge for the "min" unit label
+      const label = Number(tx) <= W - PAD.r - 28 ? `<text class="label" x="${tx}" y="${axisY + 14}" text-anchor="middle">${m}</text>` : '';
+      return `<line class="grid" x1="${tx}" x2="${tx}" y1="${PAD.t}" y2="${bottom}"/><line class="axis" x1="${tx}" x2="${tx}" y1="${axisY}" y2="${axisY + 4}"/>${label}`;
+    })
+    .join('');
   const unit = UNIT_SYSTEMS[units].depth;
   const maxLabel = `${depthValue(maxD, units).toFixed(0)} ${unit}`;
   return `<svg class="profile" viewBox="0 0 ${W} ${H}" role="img" aria-label="Depth profile, max ${maxLabel} over ${minutes} minutes">
+    ${ticks}
     <line class="axis" x1="${PAD.l}" x2="${W - PAD.r}" y1="${y(0)}" y2="${y(0)}"/>
+    <line class="axis" x1="${PAD.l}" x2="${W - PAD.r}" y1="${axisY}" y2="${axisY}"/>
     <path class="depth" d="${d}"/>
     ${markers}
     <text class="label" x="${PAD.l - 4}" y="${y(0) + 4}" text-anchor="end">0 ${unit}</text>
     <text class="label" x="${PAD.l - 4}" y="${y(maxD)}" text-anchor="end">${maxLabel}</text>
-    <text class="label" x="${W - PAD.r}" y="${H - 4}" text-anchor="end">${minutes} min</text>
+    <text class="label" x="${W - PAD.r}" y="${axisY + 14}" text-anchor="end">min</text>
   </svg>`;
 }

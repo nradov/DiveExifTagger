@@ -32,9 +32,10 @@ Your original files are never modified.
 Your browser downloads a `.zip` file containing the dive's `.fit` file. Drop
 the `.zip` into DiveExifTagger as is; there's no need to unzip it.
 
-Positions are only available if the dive computer itself got a GPS fix. A
-location you set by hand in the Suunto app is not included in its FIT export;
-use the manual position option for those dives.
+**Positions come only from the dive computer's own GPS fixes.** If you change
+or add a dive location afterwards on the Garmin Connect website or in the Suunto
+app, the exported FIT file still contains the coordinates the dive computer
+recorded (or none). Use the manual position option for those dives.
 
 Suunto support was tested against Suunto Ocean exports (scuba and freediving).
 Other dive log formats can be added; see [Adding dive log formats](#adding-dive-log-formats).

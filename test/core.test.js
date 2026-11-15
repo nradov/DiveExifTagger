@@ -7,6 +7,7 @@ import { readExif, writeExif, parseExifOffset } from '../src/exif/jpeg-exif.js';
 import { photoTime, matchPhoto, interpolate } from '../src/match.js';
 import { zipSync } from 'fflate';
 import { defaultUnits, formatDepth, formatTemperature } from '../src/ui/units.js';
+import { minuteTicks } from '../src/ui/profile.js';
 import { buildDiveFit, buildSuuntoFit, FitWriter, toFitTime } from './helpers/fit-writer.js';
 import { Decoder, Stream } from '@garmin/fitsdk';
 import { buildJpeg, MAKER_NOTE_MAGIC } from './helpers/jpeg-builder.js';
@@ -260,6 +261,15 @@ test('display units: conversions, formatting and locale defaults', () => {
   assert.equal(defaultUnits('en-GB'), 'metric');
   assert.equal(defaultUnits('de-DE'), 'metric');
   assert.equal(defaultUnits('not a locale'), 'metric');
+});
+
+test('profile time axis: nice minute intervals', () => {
+  assert.deepEqual(minuteTicks(74.2), [0, 10, 20, 30, 40, 50, 60, 70]);
+  assert.deepEqual(minuteTicks(49), [0, 10, 20, 30, 40]);
+  assert.deepEqual(minuteTicks(5.5), [0, 1, 2, 3, 4, 5]);
+  assert.deepEqual(minuteTicks(12), [0, 2, 4, 6, 8, 10, 12]);
+  assert.deepEqual(minuteTicks(180), [0, 30, 60, 90, 120, 150, 180]);
+  assert.equal(minuteTicks(600).length <= 9, true);
 });
 
 function indexOf(hay, needle) {

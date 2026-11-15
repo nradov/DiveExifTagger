@@ -2,21 +2,48 @@
   <title>DiveExifTagger</title>
   <defs>
     <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#1c8fc9"/>
-      <stop offset="1" stop-color="#063a5c"/>
+      <stop offset="0" stop-color="#2ba3dc"/>
+      <stop offset="1" stop-color="#04324f"/>
     </linearGradient>
+    <radialGradient id="glow" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#fff6c8"/>
+      <stop offset="1" stop-color="#ffc83d"/>
+    </radialGradient>
   </defs>
-  <!-- deep-water tile -->
+  <!-- water, with the surface rippling along the top -->
   <rect width="64" height="64" rx="14" fill="url(#water)"/>
-  <!-- rising bubbles -->
-  <circle cx="47" cy="13" r="3.2" fill="none" stroke="#fff" stroke-width="2.2" opacity=".9"/>
-  <circle cx="54" cy="6.5" r="2" fill="#fff" opacity=".75"/>
-  <!-- camera body with viewfinder hump -->
-  <path d="M10 26a5 5 0 0 1 5-5h7l3.5-5h13l3.5 5h7a5 5 0 0 1 5 5v21a5 5 0 0 1-5 5H15a5 5 0 0 1-5-5z" fill="#fff"/>
-  <!-- lens -->
-  <circle cx="32" cy="36" r="11" fill="#063a5c"/>
-  <circle cx="32" cy="36" r="7" fill="#1c8fc9"/>
-  <circle cx="29" cy="33" r="2.4" fill="#fff" opacity=".85"/>
-  <!-- strobe -->
-  <rect x="14.5" y="25" width="5" height="3.5" rx="1" fill="#f08a24"/>
+  <path d="M0 9c5.3-3 10.7-3 16 0s10.7 3 16 0 10.7-3 16 0 10.7 3 16 0" fill="none" stroke="#bfe8fb" stroke-width="2.4" stroke-linecap="round" opacity=".8"/>
+
+  <!-- bubble trail, rising toward the surface -->
+  <g fill="#fff" fill-opacity=".22" stroke="#fff" stroke-width="1.3">
+    <circle cx="37.5" cy="25" r="2.4"/>
+    <circle cx="41.5" cy="17.5" r="3.4"/>
+    <circle cx="38" cy="10.5" r="1.8"/>
+  </g>
+  <g fill="#fff">
+    <circle cx="36.7" cy="24.2" r=".8"/>
+    <circle cx="40.3" cy="16.3" r="1.1"/>
+  </g>
+
+  <!-- strobe arms -->
+  <g fill="none" stroke="#1a1f24" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M17 44H11V31l3-6"/>
+    <path d="M47 44h6V31l-3-6"/>
+  </g>
+  <!-- strobes, angled in toward the subject -->
+  <g transform="rotate(-25 14 22)">
+    <rect x="8" y="16.5" width="12" height="10" rx="2.5" fill="#1a1f24"/>
+    <rect x="9.5" y="16.5" width="9" height="4" rx="1.5" fill="url(#glow)"/>
+  </g>
+  <g transform="rotate(25 50 22)">
+    <rect x="44" y="16.5" width="12" height="10" rx="2.5" fill="#1a1f24"/>
+    <rect x="45.5" y="16.5" width="9" height="4" rx="1.5" fill="url(#glow)"/>
+  </g>
+
+  <!-- housing with a big dome port -->
+  <rect x="17" y="33" width="30" height="22" rx="5" fill="#ffd23f"/>
+  <rect x="17" y="33" width="30" height="22" rx="5" fill="none" stroke="#1a1f24" stroke-width="1.5"/>
+  <circle cx="32" cy="44" r="9.5" fill="#1a1f24"/>
+  <circle cx="32" cy="44" r="6.5" fill="#2ba3dc"/>
+  <circle cx="29.5" cy="41.5" r="2.2" fill="#fff" opacity=".9"/>
 </svg>

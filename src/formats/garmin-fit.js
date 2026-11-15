@@ -73,7 +73,7 @@ export function parse(input, { fileName = '' } = {}) {
   const device =
     fileId.productName ||
     (fileId.manufacturer === 'garmin' && typeof fileId.garminProduct === 'string'
-      ? `Garmin ${fileId.garminProduct}`
+      ? `Garmin ${prettyProduct(fileId.garminProduct)}`
       : fileId.manufacturer === 'garmin'
         ? 'Garmin'
         : null);
@@ -144,6 +144,11 @@ function toMs(v) {
   if (v instanceof Date) return v.getTime();
   if (isNum(v)) return v * 1000 + FIT_EPOCH_MS;
   return NaN;
+}
+
+/** "descentMk3i" → "Descent Mk3i" */
+function prettyProduct(name) {
+  return name.replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/^./, (c) => c.toUpperCase());
 }
 
 function num(v) {

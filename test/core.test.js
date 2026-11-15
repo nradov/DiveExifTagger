@@ -28,6 +28,7 @@ test('FIT: parses a Garmin dive into the dive model', () => {
   near(d.maxDepth, 18, 1e-3);
   assert.equal(d.minTemperature, 24);
   assert.equal(d.samples.length, 241);
+  assert.equal(d.device, 'Garmin Descent Mk3i');
 });
 
 test('FIT: fixture files are valid for the official SDK (header + CRC)', () => {

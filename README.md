@@ -55,7 +55,7 @@ Then open <http://localhost:8080> (needs internet access the first time to load
 the FIT SDK from jsDelivr). (Opening `index.html` directly from disk
 won't work because browsers block ES modules on `file://`.)
 
-Run the tests (Node 20+):
+Run the tests (Node 22+):
 
 ```sh
 npm install   # installs @garmin/fitsdk (dev dependency)

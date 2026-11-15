@@ -17,7 +17,7 @@ Thanks for helping! Bug reports, sample dive logs and new format parsers are all
 ```sh
 npm start   # serve at http://localhost:8080
 npm install # once: installs the FIT SDK for tests
-npm test    # node --test, Node 20+
+npm test    # node --test, Node 22+
 ```
 
 ## Reporting a bug with a dive log

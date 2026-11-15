@@ -19,8 +19,18 @@ Your original files are never modified.
 
 | Brand | How to get the file | Where the position comes from |
 | --- | --- | --- |
-| **Garmin** (Descent Mk2/Mk3, G1, other Garmin dive watches) | Garmin Connect → activity → ⚙ → *Export Original* (a `.zip` containing a `.fit`; drop the `.zip` in as is) | Entry/exit points recorded by the watch |
+| **Garmin** (Descent Mk2/Mk3, G1, other Garmin dive watches) | Export from the Garmin Connect website (see [below](#exporting-a-dive-from-garmin-connect)) | Entry/exit points recorded by the watch |
 | **Suunto** (Ocean, Nautic and other models that sync to the Suunto app) | Suunto app → dive → *Export* / download as a `.fit` file | GPS fixes the watch recorded at the surface before and after the dive |
+
+### Exporting a dive from Garmin Connect
+
+1. Sign in to [Garmin Connect](https://connect.garmin.com/) in a web browser.
+2. Open the dive activity.
+3. Click the **More** button: the gear icon in the upper right corner of the activity page.
+4. Click **Export File**.
+
+Your browser downloads a `.zip` file containing the dive's `.fit` file. Drop
+the `.zip` into DiveExifTagger as is; there's no need to unzip it.
 
 Positions are only available if the dive computer itself got a GPS fix. A
 location you set by hand in the Suunto app is not included in its FIT export;

@@ -4,7 +4,7 @@
  */
 import { PARSERS, ACCEPTED_EXTENSIONS, parseDiveLogFile } from './formats/index.js';
 import { readExif, writeExif, parseExifDate } from './exif/jpeg-exif.js';
-import { photoUtcTime, matchPhoto } from './match.js';
+import { photoTime, matchPhoto } from './match.js';
 import { zipSync } from 'fflate';
 import { profileSvg } from './ui/profile.js';
 
@@ -14,7 +14,6 @@ const state = {
   dives: [],
   /** @type {{id:number, file:File, exif:any, error:string|null, url:string}[]} */
   photos: [],
-  tzTouched: false,
   rows: [],
 };
 let photoId = 0;
@@ -31,8 +30,6 @@ for (let m = -12 * 60; m <= 14 * 60; m += 15) {
   opt.textContent = `UTC${formatOffset(m)}`;
   tzSelect.append(opt);
 }
-tzSelect.value = String(-new Date().getTimezoneOffset());
-tzSelect.addEventListener('change', () => (state.tzTouched = true));
 
 setupDropzone('#log-drop', '#log-input', addLogs);
 setupDropzone('#photo-drop', '#photo-input', addPhotos);
@@ -83,9 +80,6 @@ async function addLogs(files) {
     }
   }
   state.dives.sort((a, b) => a.startTime - b.startTime);
-  // Default the camera time zone to the one the dive computer used.
-  const tz = state.dives.find((d) => d.utcOffsetMinutes !== null)?.utcOffsetMinutes;
-  if (!state.tzTouched && tz != null && tzSelect.querySelector(`option[value="${tz}"]`)) tzSelect.value = String(tz);
   render();
 }
 
@@ -117,7 +111,6 @@ function clearAll() {
   state.photos.forEach((p) => URL.revokeObjectURL(p.url));
   state.dives = [];
   state.photos = [];
-  state.tzTouched = false;
   render();
 }
 
@@ -132,9 +125,9 @@ function readSettings() {
   const lon = parseFloat(f.manualLon.value);
   const manual = manualMode && Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180;
   return {
-    cameraUtcOffsetMinutes: parseInt(f.cameraUtcOffsetMinutes.value, 10) || 0,
+    cameraUtcOffsetMinutes: f.cameraUtcOffsetMinutes.value === 'auto' ? null : parseInt(f.cameraUtcOffsetMinutes.value, 10),
+    fallbackUtcOffsetMinutes: -new Date().getTimezoneOffset(),
     clockCorrectionSeconds: parseCorrection(f.clockCorrection.value),
-    preferOffsetTag: f.preferOffsetTag.checked,
     locationMode: f.locationMode.value,
     manualPosition: manual ? { lat, lon } : null,
     toleranceMinutes: Math.max(0, parseFloat(f.toleranceMinutes.value) || 0),
@@ -161,11 +154,12 @@ function applySync() {
   if (!photo?.exif?.dateTimeOriginal || !shown) return toast('Choose a photo and enter the time shown on the dive computer');
   const s = readSettings();
   const wall = parseExifDate(photo.exif.dateTimeOriginal, photo.exif.subSecTimeOriginal);
-  const uncorrected = photoUtcTime(photo.exif, { ...s, clockCorrectionSeconds: 0 });
+  const pt = photoTime(photo.exif, state.dives, { ...s, clockCorrectionSeconds: 0 });
+  const uncorrected = pt.time;
 
   // The dive computer shows local time in the zone of the nearest dive.
   const dive = nearestDive(uncorrected);
-  const diveOffset = dive?.utcOffsetMinutes ?? s.cameraUtcOffsetMinutes;
+  const diveOffset = dive?.utcOffsetMinutes ?? pt.offsetMinutes;
   const [h, m, sec = 0] = shown.split(':').map(Number);
   const day = new Date(wall);
   let shownWall = Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate(), h, m, sec);
@@ -197,8 +191,9 @@ function computeRows(s) {
   return state.photos.map((photo) => {
     const row = { photo, time: null, match: null, status: 'ready', note: '' };
     if (photo.error) return { ...row, status: 'error', note: photo.error };
-    row.time = photoUtcTime(photo.exif, s);
-    if (row.time === null) return { ...row, status: 'error', note: 'No capture time in EXIF' };
+    row.pt = photoTime(photo.exif, state.dives, s);
+    if (!row.pt) return { ...row, status: 'error', note: 'No capture time in EXIF' };
+    row.time = row.pt.time;
     row.match = matchPhoto(row.time, state.dives, s);
     if (!row.match) return { ...row, status: 'skip', note: 'No dive at this time' };
     if (s.skipExistingGps && photo.exif.gps) return { ...row, status: 'skip', note: 'Already has GPS' };
@@ -273,7 +268,11 @@ function renderTable() {
       return `<tr class="st-${r.status}">
         <td><img src="${r.photo.url}" alt="" loading="lazy" decoding="async" width="56" height="42" /></td>
         <td>${esc(r.photo.file.name)}<br /><small class="muted">${esc(r.photo.exif?.dateTimeOriginal || '')}</small></td>
-        <td>${r.time !== null ? esc(new Date(r.time).toISOString().replace('T', ' ').slice(0, 19)) : '–'}</td>
+        <td>${
+          r.pt
+            ? `${esc(new Date(r.time).toISOString().replace('T', ' ').slice(0, 19))}<br /><small class="muted tz-src">camera on UTC${formatOffset(r.pt.offsetMinutes)}, ${TZ_SOURCE[r.pt.source]}</small>`
+            : '–'
+        }</td>
         <td>${m ? esc(fmtLocal(m.dive.startTime, m.dive.utcOffsetMinutes).slice(-5)) : '–'}</td>
         <td>${m?.depth != null ? m.depth.toFixed(1) + ' m' : '–'}</td>
         <td>${m?.temperature != null ? m.temperature.toFixed(1) + ' °C' : '–'}</td>
@@ -386,6 +385,13 @@ function toast(msg) {
   document.body.append(el);
   setTimeout(() => el.remove(), 5000);
 }
+
+const TZ_SOURCE = {
+  manual: 'set manually',
+  photo: 'from photo',
+  'dive computer': 'from dive computer',
+  'this computer': 'this computer’s zone',
+};
 
 function formatOffset(m) {
   const sign = m < 0 ? '-' : '+';

@@ -19,6 +19,7 @@ const TAG = {
   GPS_IFD: 0x8825,
   // Exif IFD
   DATETIME_ORIGINAL: 0x9003,
+  OFFSET_TIME: 0x9010,
   OFFSET_TIME_ORIGINAL: 0x9011,
   SUBSEC_TIME_ORIGINAL: 0x9291,
   AMBIENT_TEMPERATURE: 0x9400, // Exif 2.31 "Temperature", SRATIONAL °C
@@ -184,7 +185,8 @@ export function readExif(input) {
   if (exifPtr) {
     const ie = readIfd(tiff, view, exifPtr, little);
     out.dateTimeOriginal = get(ie, TAG.DATETIME_ORIGINAL) || null;
-    out.offsetTimeOriginal = get(ie, TAG.OFFSET_TIME_ORIGINAL) || null;
+    // OffsetTimeOriginal (Exif 2.31) is the zone of DateTimeOriginal; fall back to OffsetTime.
+    out.offsetTimeOriginal = get(ie, TAG.OFFSET_TIME_ORIGINAL) || get(ie, TAG.OFFSET_TIME) || null;
     out.subSecTimeOriginal = get(ie, TAG.SUBSEC_TIME_ORIGINAL) || null;
     out.waterDepth = get(ie, TAG.WATER_DEPTH) ?? null;
     out.temperature = get(ie, TAG.AMBIENT_TEMPERATURE) ?? null;

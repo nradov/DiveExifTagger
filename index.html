@@ -60,20 +60,23 @@
             <legend>Camera clock</legend>
             <label>
               Camera time zone
-              <select name="cameraUtcOffsetMinutes" id="tz-select"></select>
-            </label>
-            <label>
-              Clock correction
-              <input name="clockCorrection" type="text" value="0" placeholder="e.g. +1:23 or -45" inputmode="text" />
-              <small>Added to camera time. <code>[-]h:mm:ss</code>, <code>m:ss</code> or seconds.</small>
-            </label>
-            <label class="check">
-              <input name="preferOffsetTag" type="checkbox" checked />
-              Use the photo's own time zone tag (OffsetTimeOriginal) when present
+              <select name="cameraUtcOffsetMinutes" id="tz-select">
+                <option value="auto" selected>Automatic</option>
+              </select>
+              <small id="tz-hint">
+                Uses the time zone saved in each photo, or else assumes the camera was set to the same time
+                zone as the dive computer. Pick a zone only if that's wrong.
+              </small>
             </label>
             <details class="sync">
-              <summary>Work out the correction from a photo of your dive computer's screen</summary>
+              <summary>Camera clock was a few minutes off?</summary>
               <div class="sync-body">
+                <label>
+                  Clock correction
+                  <input name="clockCorrection" type="text" value="0" placeholder="e.g. +1:23 or -45" inputmode="text" />
+                  <small>Added to every photo's time: <code>[-]h:mm:ss</code>, <code>m:ss</code> or seconds.</small>
+                </label>
+                <p class="sub">Or work it out from a photo of your dive computer's screen:</p>
                 <label>
                   Photo
                   <select id="sync-photo"></select>
@@ -83,7 +86,6 @@
                   <input id="sync-time" type="time" step="1" />
                 </label>
                 <button type="button" id="sync-apply">Calculate correction</button>
-                <small>Assumes the dive computer displays local time for the matched dive.</small>
               </div>
             </details>
           </fieldset>

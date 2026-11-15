@@ -7,23 +7,50 @@ import { isNum } from './model.js';
 
 /**
  * @typedef {Object} TimeSettings
- * @property {number} cameraUtcOffsetMinutes  time zone the camera clock was set to
- * @property {number} clockCorrectionSeconds  added to camera time (fixes clock drift)
- * @property {boolean} preferOffsetTag        use EXIF OffsetTimeOriginal when present
+ * @property {number|null} cameraUtcOffsetMinutes  manual camera time zone; null = automatic
+ * @property {number} clockCorrectionSeconds       added to camera time (fixes clock drift)
+ * @property {number} [fallbackUtcOffsetMinutes]   last resort, e.g. the browser's own zone
+ *
+ * @typedef {Object} PhotoTime
+ * @property {number} time            UTC ms
+ * @property {number} offsetMinutes   time zone used for the camera's local time
+ * @property {'manual'|'photo'|'dive computer'|'this computer'} source
  */
 
 /**
- * Convert a photo's EXIF capture time to UTC ms.
+ * Convert a photo's EXIF capture time (local wall-clock time) to UTC.
+ *
+ * Time zone, in order of preference:
+ *   1. a zone the user picked manually,
+ *   2. the photo's own OffsetTimeOriginal / OffsetTime tag,
+ *   3. the dive computer's zone, assuming camera and dive computer were set to
+ *      the same zone (tried for each dive's zone, keeping the one that lands the
+ *      photo in a dive with that zone),
+ *   4. `fallbackUtcOffsetMinutes`.
+ *
  * @param {{dateTimeOriginal:string|null, offsetTimeOriginal:string|null, subSecTimeOriginal:string|null}} exif
- * @param {TimeSettings} s
- * @returns {number|null}
+ * @param {import('./model.js').Dive[]} dives
+ * @param {TimeSettings & Partial<MatchSettings>} s
+ * @returns {PhotoTime|null}
  */
-export function photoUtcTime(exif, s) {
+export function photoTime(exif, dives, s) {
   const wall = parseExifDate(exif.dateTimeOriginal, exif.subSecTimeOriginal);
   if (wall === null) return null;
-  const tagOffset = s.preferOffsetTag ? parseExifOffset(exif.offsetTimeOriginal) : null;
-  const offset = tagOffset ?? s.cameraUtcOffsetMinutes ?? 0;
-  return wall - offset * 60_000 + (s.clockCorrectionSeconds || 0) * 1000;
+  const correction = (s.clockCorrectionSeconds || 0) * 1000;
+  const at = (offsetMinutes, source) => ({ time: wall - offsetMinutes * 60_000 + correction, offsetMinutes, source });
+
+  if (isNum(s.cameraUtcOffsetMinutes)) return at(s.cameraUtcOffsetMinutes, 'manual');
+
+  const tag = parseExifOffset(exif.offsetTimeOriginal);
+  if (tag !== null) return at(tag, 'photo');
+
+  const zones = [...new Set(dives.map((d) => d.utcOffsetMinutes).filter(isNum))];
+  for (const z of zones) {
+    const t = at(z, 'dive computer');
+    if (matchPhoto(t.time, dives, { toleranceMinutes: 0, ...s })?.dive.utcOffsetMinutes === z) return t;
+  }
+  if (zones.length) return at(zones[0], 'dive computer');
+  return at(s.fallbackUtcOffsetMinutes ?? 0, 'this computer');
 }
 
 /**

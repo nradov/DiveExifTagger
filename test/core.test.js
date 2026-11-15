@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 
 import { parseDiveLog, parseDiveLogFile, findParser } from '../src/formats/index.js';
 import { readExif, writeExif, parseExifOffset } from '../src/exif/jpeg-exif.js';
-import { photoUtcTime, matchPhoto, interpolate } from '../src/match.js';
+import { photoTime, matchPhoto, interpolate } from '../src/match.js';
 import { zipSync } from 'fflate';
 import { buildDiveFit, FitWriter, toFitTime } from './helpers/fit-writer.js';
 import { Decoder, Stream } from '@garmin/fitsdk';
@@ -154,11 +154,15 @@ test('matching: time conversion, interpolation and location modes', () => {
   const fit = buildDiveFit();
   const [dive] = parseDiveLog('d.fit', fit.bytes);
 
-  // Camera set to local time (UTC+10), 20 min into the dive, camera 30 s slow.
-  const t = photoUtcTime(
+  // Camera on local time (UTC+10, no zone tag), 20 min into the dive, camera 30 s slow.
+  // Automatic mode takes the zone from the dive computer.
+  const pt = photoTime(
     { dateTimeOriginal: '2026:11:14 11:19:30', offsetTimeOriginal: null, subSecTimeOriginal: null },
-    { cameraUtcOffsetMinutes: 600, clockCorrectionSeconds: 30, preferOffsetTag: true },
+    [dive],
+    { cameraUtcOffsetMinutes: null, clockCorrectionSeconds: 30, toleranceMinutes: 30 },
   );
+  assert.deepEqual([pt.offsetMinutes, pt.source], [600, 'dive computer']);
+  const t = pt.time;
   assert.equal(t, fit.start + 20 * 60_000);
 
   const base = { toleranceMinutes: 30, manualPosition: null };
@@ -180,16 +184,25 @@ test('matching: time conversion, interpolation and location modes', () => {
   assert.deepEqual([manual.lat, manual.lon], [1, 2]);
 });
 
-test('matching: OffsetTimeOriginal wins when preferred', () => {
+test('time zone: photo tag beats dive computer; a manual choice beats both', () => {
+  const [dive] = parseDiveLog('d.fit', buildDiveFit().bytes); // dive computer on UTC+10
   const exif = { dateTimeOriginal: '2026:11:14 03:00:00', offsetTimeOriginal: '+02:00', subSecTimeOriginal: null };
-  assert.equal(
-    photoUtcTime(exif, { cameraUtcOffsetMinutes: 600, clockCorrectionSeconds: 0, preferOffsetTag: true }),
-    Date.UTC(2026, 10, 14, 1),
-  );
-  assert.equal(
-    photoUtcTime(exif, { cameraUtcOffsetMinutes: 600, clockCorrectionSeconds: 0, preferOffsetTag: false }),
-    Date.UTC(2026, 10, 13, 17),
-  );
+  const auto = photoTime(exif, [dive], { cameraUtcOffsetMinutes: null, clockCorrectionSeconds: 0 });
+  assert.deepEqual([auto.time, auto.source], [Date.UTC(2026, 10, 14, 1), 'photo']);
+  const manual = photoTime(exif, [dive], { cameraUtcOffsetMinutes: 600, clockCorrectionSeconds: 0 });
+  assert.deepEqual([manual.time, manual.source], [Date.UTC(2026, 10, 13, 17), 'manual']);
+});
+
+test('time zone: picks the zone of the dive the photo falls in (trips across zones)', () => {
+  const home = parseDiveLog('a.fit', buildDiveFit({ start: Date.UTC(2026, 10, 1, 18), utcOffsetMinutes: -420 }).bytes)[0];
+  const away = parseDiveLog('b.fit', buildDiveFit({ start: Date.UTC(2026, 10, 14, 1), utcOffsetMinutes: 600 }).bytes)[0];
+  const s = { cameraUtcOffsetMinutes: null, clockCorrectionSeconds: 0, toleranceMinutes: 30 };
+  const noTag = (dt) => ({ dateTimeOriginal: dt, offsetTimeOriginal: null, subSecTimeOriginal: null });
+  assert.equal(photoTime(noTag('2026:11:14 11:10:00'), [home, away], s).offsetMinutes, 600);
+  assert.equal(photoTime(noTag('2026:11:01 11:10:00'), [home, away], s).offsetMinutes, -420);
+  // no dives at all: falls back to the given zone
+  const fb = photoTime(noTag('2026:11:01 11:10:00'), [], { ...s, fallbackUtcOffsetMinutes: -480 });
+  assert.deepEqual([fb.offsetMinutes, fb.source], [-480, 'this computer']);
 });
 
 test('interpolate skips missing values', () => {

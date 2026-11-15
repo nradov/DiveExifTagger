@@ -9,7 +9,7 @@ install.
 1. Drop in one or more dive logs (currently **Garmin FIT**, e.g. Descent series),
    either as `.fit` files or as the `.zip` you get when exporting from Garmin Connect.
 2. Drop in your JPEG photos.
-3. Check the camera time zone / clock correction.
+3. Check the times. Time zones are detected automatically.
 4. Download the geotagged copies as a ZIP, or save them straight to a folder.
 
 Your original files are never modified.
@@ -34,15 +34,22 @@ and re-pointed.
 
 ## Getting camera time right
 
-Cameras store local wall-clock time with no time zone, and their clocks drift.
-DiveExifTagger converts photo times to UTC using:
+Cameras record local wall-clock time, and their clocks drift. With the camera
+time zone left on **Automatic**, DiveExifTagger works out each photo's time zone
+from:
 
-- the photo's `OffsetTimeOriginal` tag, if the camera wrote one, otherwise
-- the **camera time zone** setting (defaulted to the zone the dive computer
-  was using), plus
-- a **clock correction**. The easiest way to find it: take a photo of your dive
-  computer's screen, then use *"Work out the correction from a photo of your
-  dive computer's screen"*.
+1. the time zone saved in the photo (`OffsetTimeOriginal`, or `OffsetTime`).
+   Many recent cameras write this, including the OM System / Olympus TG-7;
+2. otherwise, the dive computer's time zone for that dive, assuming the camera
+   and dive computer were set to the same zone. With dives in several zones,
+   each photo gets the zone of the dive it falls in.
+
+Choosing a specific zone overrides both. The review table shows which zone was
+used for each photo and where it came from.
+
+If the camera clock was off by a few minutes, open *"Camera clock was a few
+minutes off?"* and enter a correction. The easiest way to find it is to take a
+photo of your dive computer's screen and let the app calculate it.
 
 ## Running locally
 

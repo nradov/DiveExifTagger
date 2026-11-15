@@ -124,6 +124,12 @@ If the camera clock was off by a few minutes, open *"Camera clock was a few
 minutes off?"* and enter a correction. The easiest way to find it is to take a
 photo of your dive computer's screen and let the app calculate it.
 
+**Tip: let a GPS-equipped camera set its own clock.** Cameras with a built-in
+GPS receiver, such as the OM System / Olympus TG series, can set their clock
+automatically from GPS signals, which avoids clock drift. Do this on land or on
+the boat before the dive, then turn the camera's GPS features off before you
+start the dive to save battery life: GPS doesn't work underwater.
+
 ## Running locally
 
 There's no build step. Any static file server works:

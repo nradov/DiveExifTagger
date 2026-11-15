@@ -12,12 +12,16 @@
  * @property {(bytes: Uint8Array, opts: {fileName: string}) => import('../model.js').Dive[]} parse
  */
 import garminFit from './garmin-fit.js';
+import { isZip, readZip } from '../zip.js';
 
 /** @type {DiveLogParser[]} */
 export const PARSERS = [garminFit];
 
-/** File extensions accepted by the file picker. */
-export const ACCEPTED_EXTENSIONS = [...new Set(PARSERS.flatMap((p) => p.extensions))];
+/**
+ * File extensions accepted by the file picker. ZIP archives (as downloaded
+ * from Garmin Connect and similar services) are unpacked automatically.
+ */
+export const ACCEPTED_EXTENSIONS = [...new Set(PARSERS.flatMap((p) => p.extensions)), '.zip'];
 
 /**
  * Find a parser for a file: content sniffing first, extension as fallback.
@@ -47,4 +51,30 @@ export function parseDiveLog(fileName, data) {
   const parser = findParser(fileName, bytes);
   if (!parser) throw new Error(`Unsupported dive log format: ${fileName}`);
   return parser.parse(bytes, { fileName });
+}
+
+/**
+ * Parse a dive log file the user selected. ZIP archives are unpacked and
+ * every supported log inside them is parsed; other entries are ignored.
+ * @param {string} fileName
+ * @param {ArrayBuffer|Uint8Array} data
+ * @returns {Promise<import('../model.js').Dive[]>}
+ */
+export async function parseDiveLogFile(fileName, data) {
+  const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
+  if (!isZip(bytes)) return parseDiveLog(fileName, bytes);
+
+  const entries = (await readZip(bytes)).filter(
+    (e) => !e.name.startsWith('__MACOSX/') && !/(^|\/)\./.test(e.name), // macOS/hidden junk
+  );
+  const dives = [];
+  let supported = 0;
+  for (const e of entries) {
+    const base = e.name.split('/').pop();
+    if (!findParser(base, e.data)) continue;
+    supported++;
+    dives.push(...parseDiveLog(`${fileName} › ${base}`, e.data));
+  }
+  if (!supported) throw new Error('ZIP archive contains no supported dive log files');
+  return dives;
 }

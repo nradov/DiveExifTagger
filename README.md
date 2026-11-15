@@ -4,7 +4,8 @@ Geotag underwater photos with **location, depth and water temperature** from you
 dive computer's log, entirely in your web browser. No uploads, no server, no
 install.
 
-1. Drop in one or more dive logs (currently **Garmin FIT**, e.g. Descent series).
+1. Drop in one or more dive logs (currently **Garmin FIT**, e.g. Descent series),
+   either as `.fit` files or as the `.zip` you get when exporting from Garmin Connect.
 2. Drop in your JPEG photos.
 3. Check the camera time zone / clock correction.
 4. Download the geotagged copies as a ZIP, or save them straight to a folder.
@@ -78,7 +79,7 @@ src/match.js             photo ↔ dive matching and interpolation
 src/formats/index.js     dive log parser registry
 src/formats/garmin-fit.js   Garmin FIT → Dive adapter (uses @garmin/fitsdk)
 src/exif/jpeg-exif.js    JPEG EXIF reader/writer
-src/zip.js               tiny ZIP writer
+src/zip.js               tiny ZIP reader (for log archives) and writer (for exports)
 src/ui/profile.js        SVG depth profile
 test/                    node:test suite and fixture builders
 docs/ADDING_A_FORMAT.md  how to add another dive log format

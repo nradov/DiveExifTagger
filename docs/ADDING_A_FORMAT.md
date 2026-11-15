@@ -70,7 +70,8 @@ export const PARSERS = [garminFit, uddf];
 ```
 
 The file picker's accepted extensions and the "Supported:" hint update
-automatically.
+automatically, and files in your format are also found inside uploaded `.zip`
+archives (`parseDiveLogFile` unpacks them and runs `findParser` on each entry).
 
 ## 3. Test it
 

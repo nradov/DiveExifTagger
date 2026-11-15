@@ -1,7 +1,7 @@
 /**
  * UI controller. All processing happens locally in the browser.
  */
-import { PARSERS, ACCEPTED_EXTENSIONS, parseDiveLog } from './formats/index.js';
+import { PARSERS, ACCEPTED_EXTENSIONS, parseDiveLogFile } from './formats/index.js';
 import { readExif, writeExif, parseExifDate } from './exif/jpeg-exif.js';
 import { photoUtcTime, matchPhoto } from './match.js';
 import { createZip } from './zip.js';
@@ -20,7 +20,7 @@ let photoId = 0;
 
 // ------------------------------------------------------------------ setup
 
-$('#log-formats').textContent = `Supported: ${PARSERS.map((p) => `${p.name} (${p.extensions.join(', ')})`).join(' · ')}`;
+$('#log-formats').textContent = `Supported: ${PARSERS.map((p) => `${p.name} (${p.extensions.join(', ')})`).join(' · ')}, or a .zip containing them (e.g. a Garmin Connect export)`;
 $('#log-input').accept = ACCEPTED_EXTENSIONS.join(',');
 
 const tzSelect = $('#tz-select');
@@ -67,7 +67,7 @@ function setupDropzone(zoneSel, inputSel, handler) {
 async function addLogs(files) {
   for (const file of files) {
     try {
-      const dives = parseDiveLog(file.name, await file.arrayBuffer());
+      const dives = await parseDiveLogFile(file.name, await file.arrayBuffer());
       if (!dives.length) throw new Error('no dive data found');
       state.dives.push(...dives);
     } catch (err) {

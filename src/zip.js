@@ -93,3 +93,71 @@ function dosDateTime(d) {
     date: ((Math.max(d.getFullYear(), 1980) - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate(),
   };
 }
+
+// ------------------------------------------------------------------ reading
+
+/** True if the bytes start with a ZIP local file header ("PK\3\4"). */
+export function isZip(bytes) {
+  return bytes.length >= 4 && bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 0x03 && bytes[3] === 0x04;
+}
+
+/**
+ * Extract the files from a ZIP archive (STORE and DEFLATE entries).
+ * Deflate uses the platform's DecompressionStream, available in all current
+ * browsers and in Node 18+.
+ *
+ * @param {Uint8Array} bytes
+ * @returns {Promise<{name: string, data: Uint8Array}[]>}
+ */
+export async function readZip(bytes) {
+  const v = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+
+  // Find the end of central directory record (it may be followed by a comment).
+  let eocd = -1;
+  for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 22 - 0xffff); i--) {
+    if (v.getUint32(i, true) === 0x06054b50) {
+      eocd = i;
+      break;
+    }
+  }
+  if (eocd < 0) throw new Error('Not a valid ZIP file');
+  const count = v.getUint16(eocd + 10, true);
+  let p = v.getUint32(eocd + 16, true);
+  if (p === 0xffffffff) throw new Error('ZIP64 archives are not supported');
+
+  const dec = new TextDecoder();
+  const out = [];
+  for (let i = 0; i < count; i++) {
+    if (v.getUint32(p, true) !== 0x02014b50) throw new Error('Corrupt ZIP central directory');
+    const flags = v.getUint16(p + 8, true);
+    const method = v.getUint16(p + 10, true);
+    const compSize = v.getUint32(p + 20, true);
+    const nameLen = v.getUint16(p + 28, true);
+    const extraLen = v.getUint16(p + 30, true);
+    const commentLen = v.getUint16(p + 32, true);
+    const localOffset = v.getUint32(p + 42, true);
+    const name = dec.decode(bytes.subarray(p + 46, p + 46 + nameLen));
+    p += 46 + nameLen + extraLen + commentLen;
+
+    if (name.endsWith('/')) continue; // directory
+    if (flags & 0x1) throw new Error(`${name}: encrypted ZIP entries are not supported`);
+
+    // Sizes come from the central directory, so data descriptors (flag bit 3) are fine.
+    const lp = localOffset;
+    if (v.getUint32(lp, true) !== 0x04034b50) throw new Error('Corrupt ZIP local header');
+    const start = lp + 30 + v.getUint16(lp + 26, true) + v.getUint16(lp + 28, true);
+    const raw = bytes.subarray(start, start + compSize);
+
+    let data;
+    if (method === 0) data = raw.slice();
+    else if (method === 8) data = await inflateRaw(raw);
+    else throw new Error(`${name}: unsupported ZIP compression method ${method}`);
+    out.push({ name, data });
+  }
+  return out;
+}
+
+async function inflateRaw(raw) {
+  const stream = new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}

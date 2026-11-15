@@ -1,10 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { parseDiveLog, findParser } from '../src/formats/index.js';
+import { parseDiveLog, parseDiveLogFile, findParser } from '../src/formats/index.js';
 import { readExif, writeExif, parseExifOffset } from '../src/exif/jpeg-exif.js';
 import { photoUtcTime, matchPhoto, interpolate } from '../src/match.js';
-import { createZip } from '../src/zip.js';
+import { createZip, readZip } from '../src/zip.js';
+import { buildDeflateZip } from './helpers/zip-builder.js';
 import { buildDiveFit, FitWriter, toFitTime } from './helpers/fit-writer.js';
 import { Decoder, Stream } from '@garmin/fitsdk';
 import { buildJpeg, MAKER_NOTE_MAGIC } from './helpers/jpeg-builder.js';
@@ -46,6 +47,39 @@ test('FIT: fixture files are valid for the official SDK (header + CRC)', () => {
 
 test('FIT: rejects non-FIT data', () => {
   assert.throws(() => parseDiveLog('x.fit', new Uint8Array(40)));
+});
+
+test('FIT inside a Garmin Connect style ZIP (deflate + data descriptors)', async () => {
+  const fit = buildDiveFit();
+  const zip = buildDeflateZip([
+    { name: '__MACOSX/._21345678901_ACTIVITY.fit', data: new Uint8Array([0, 5, 22, 7]) },
+    { name: '21345678901_ACTIVITY.fit', data: fit.bytes },
+  ]);
+  const dives = await parseDiveLogFile('activity_21345678901.zip', zip);
+  assert.equal(dives.length, 1);
+  assert.equal(dives[0].startTime, fit.start);
+  assert.equal(dives[0].fileName, 'activity_21345678901.zip › 21345678901_ACTIVITY.fit');
+  near(dives[0].maxDepth, 18, 1e-3);
+});
+
+test('ZIP with several FIT files (stored) yields every dive; plain FIT still works', async () => {
+  const a = buildDiveFit({ start: Date.UTC(2026, 10, 14, 1) });
+  const b = buildDiveFit({ start: Date.UTC(2026, 10, 14, 4) });
+  const zip = createZip([
+    { name: 'dives/a.fit', data: a.bytes },
+    { name: 'dives/readme.txt', data: new TextEncoder().encode('hi') },
+    { name: 'dives/b.FIT', data: b.bytes },
+  ]);
+  const dives = await parseDiveLogFile('export.zip', zip);
+  assert.deepEqual(dives.map((d) => d.startTime).sort(), [a.start, b.start]);
+  assert.equal((await parseDiveLogFile('a.fit', a.bytes)).length, 1);
+});
+
+test('ZIP without dive logs gives a clear error', async () => {
+  const zip = createZip([{ name: 'photo.txt', data: new Uint8Array([1, 2, 3]) }]);
+  await assert.rejects(parseDiveLogFile('x.zip', zip), /no supported dive log/);
+  const round = await readZip(zip);
+  assert.deepEqual([...round[0].data], [1, 2, 3]);
 });
 
 // ------------------------------------------------------------------ EXIF

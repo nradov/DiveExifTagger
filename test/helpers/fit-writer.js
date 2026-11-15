@@ -258,3 +258,54 @@ export function buildSuuntoFit({
   ]);
   return { bytes: w.build(), start, end: start + dur * 1000, entry, exit, surfaceSeconds };
 }
+
+/**
+ * Build a FIT file for a non-diving activity recorded by a watch in a towed
+ * surface buoy: an open water swim (sport = swimming, sub_sport = open_water)
+ * with GPS on (almost) every record, a GPS gap, temperature, and no depth.
+ */
+export function buildSwimFit({
+  start = Date.UTC(2026, 8, 30, 10, 55, 0),
+  minutes = 40,
+  from = { lat: 30.2946, lon: -81.3881 },
+  to = { lat: 30.3046, lon: -81.3981 },
+  gap = [15 * 60, 22 * 60], // seconds into the activity with no GPS fix
+  utcOffsetMinutes = -240,
+} = {}) {
+  const w = new FitWriter();
+  const t0 = toFitTime(start);
+  const dur = minutes * 60;
+  w.message(0, [
+    [0, 'enum', 4],
+    [1, 'uint16', 1], // garmin
+    [2, 'uint16', 3258], // Descent Mk2 used as a GPS logger
+    [4, 'uint32', t0],
+  ]);
+  const at = (s) => ({ lat: from.lat + ((to.lat - from.lat) * s) / dur, lon: from.lon + ((to.lon - from.lon) * s) / dur });
+  for (let s = 0; s <= dur; s += 5) {
+    const fields = [
+      [253, 'uint32', t0 + s],
+      [13, 'sint8', 28],
+    ];
+    if (s <= gap[0] || s >= gap[1]) {
+      const p = at(s);
+      fields.push([0, 'sint32', toSemicircles(p.lat)], [1, 'sint32', toSemicircles(p.lon)]);
+    }
+    w.message(20, fields);
+  }
+  w.message(18, [
+    [253, 'uint32', t0 + dur],
+    [2, 'uint32', t0],
+    [3, 'sint32', toSemicircles(from.lat)],
+    [4, 'sint32', toSemicircles(from.lon)],
+    [5, 'enum', 5], // sport = swimming
+    [6, 'enum', 18], // sub_sport = open_water
+    [7, 'uint32', dur * 1000],
+    [110, 'string', 'Open Water', 16], // sport_profile_name
+  ]);
+  w.message(34, [
+    [253, 'uint32', t0 + dur],
+    [5, 'uint32', t0 + dur + utcOffsetMinutes * 60],
+  ]);
+  return { bytes: w.build(), start, end: start + dur * 1000, at: (s) => at(s), gap };
+}

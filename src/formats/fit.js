@@ -22,7 +22,7 @@ import { makeDive, isNum } from '../model.js';
 
 // Global message numbers (FIT Profile). Messages are collected by number via
 // the decoder's mesgListener so we don't depend on dictionary key names.
-const MESG = { FILE_ID: 0, SESSION: 18, LAP: 19, RECORD: 20, ACTIVITY: 34 };
+const MESG = { FILE_ID: 0, SPORT: 12, SESSION: 18, LAP: 19, RECORD: 20, ACTIVITY: 34 };
 
 const FIT_EPOCH_MS = 631065600000;
 const SEMICIRCLE_TO_DEG = 180 / 2 ** 31;
@@ -99,7 +99,7 @@ export function parse(input, { fileName = '' } = {}) {
 
   // No session messages (e.g. the watch crashed mid-dive): one dive from records.
   if (!sessions.length) {
-    return [makeDive({ source: 'fit', fileName, device, utcOffsetMinutes, samples: records })];
+    return [makeDive({ source: 'fit', fileName, device, utcOffsetMinutes, samples: records, activity: activityOf({}, get(MESG.SPORT)[0]) })];
   }
 
   return sessions.map((s, i) => {
@@ -141,8 +141,28 @@ export function parse(input, { fileName = '' } = {}) {
       entry,
       exit,
       samples,
+      activity: activityOf(s, get(MESG.SPORT)[0]),
     });
   });
+}
+
+/**
+ * What kind of activity a session records. Dive computers record scuba and
+ * freediving sessions with sport = "diving" (sub sports single/multi-gas,
+ * gauge, CCR, apnea, apnea hunting). Anything else, e.g. an open water swim
+ * from a watch in a towed buoy, is treated as a GPS track.
+ */
+function activityOf(session, sportMesg = {}) {
+  const sport = session.sport ?? sportMesg.sport ?? null;
+  const subSport = session.subSport ?? sportMesg.subSport ?? null;
+  const name = session.sportProfileName || sportMesg.name || (typeof subSport === 'string' && subSport !== 'generic' ? prettyProduct(subSport) : null) || (typeof sport === 'string' ? prettyProduct(sport) : null);
+  return {
+    sport: sport == null ? null : String(sport),
+    subSport: subSport == null ? null : String(subSport),
+    name,
+    // Without a sport, let makeDive decide from the depth data.
+    isDive: sport == null ? undefined : sport === 'diving',
+  };
 }
 
 /** Date (date_time fields) or raw FIT seconds (e.g. local_date_time) → Unix ms. */

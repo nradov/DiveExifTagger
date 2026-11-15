@@ -5,6 +5,7 @@
 import { PARSERS, ACCEPTED_EXTENSIONS, parseDiveLogFile } from './formats/index.js';
 import { readExif, writeExif, parseExifDate } from './exif/jpeg-exif.js';
 import { photoTime, matchPhoto } from './match.js';
+import { buildTags, hasPayload } from './tags.js';
 import { zipSync } from 'fflate';
 import { profileSvg } from './ui/profile.js';
 import { defaultUnits, formatDepth, formatTemperature } from './ui/units.js';
@@ -145,6 +146,7 @@ function clearAll() {
 function readSettings() {
   const f = $('#settings').elements;
   const manualMode = f.locationMode.value === 'manual';
+  $('#location-hint').hidden = f.locationMode.value !== 'auto';
   // Latitude/longitude are only editable (and only used) in manual mode.
   f.manualLat.disabled = f.manualLon.disabled = !manualMode;
   const lat = parseFloat(f.manualLat.value);
@@ -223,30 +225,21 @@ function computeRows(s) {
     row.match = matchPhoto(row.time, state.dives, s);
     if (!row.match) return { ...row, status: 'skip', note: 'No dive at this time' };
     if (s.skipExistingGps && photo.exif.gps) return { ...row, status: 'skip', note: 'Already has GPS' };
-    const tags = tagsFor(row, s);
-    if (!Object.keys(tags).some((k) => k !== 'time' && k !== 'processingMethod'))
-      return { ...row, status: 'skip', note: 'Nothing to write' };
-    if (row.match.lat === null && s.writePosition) row.note = 'No GPS position in dive log (use a manual position)';
-    else if (row.match.phase !== 'underwater') row.note = `Surface, ${row.match.phase} dive`;
+    if (!hasPayload(buildTags(row.match, row.time, s))) return { ...row, status: 'skip', note: 'Nothing to write' };
+    const m = row.match;
+    const isDive = m.dive.activity.isDive;
+    if (m.lat === null && s.writePosition) row.note = 'No GPS position in log (use a manual position)';
+    else if (!isDive && m.gpsGapSeconds > 120)
+      row.note = `Position interpolated across a ${Math.round(m.gpsGapSeconds / 60)}-minute GPS gap`;
+    else if (m.phase !== 'underwater') row.note = isDive ? `Surface, ${m.phase} dive` : `${m.phase === 'before' ? 'Before' : 'After'} the activity`;
     return row;
   });
-}
-
-function tagsFor(row, s) {
-  const m = row.match;
-  const tags = { time: row.time, processingMethod: `Dive log: ${m.dive.device || m.dive.source}` };
-  if (s.writePosition && m.lat !== null) Object.assign(tags, { lat: m.lat, lon: m.lon });
-  if (s.depthAsAltitude && m.depth !== null) tags.altitude = -m.depth;
-  if (s.writeDiveTags) {
-    if (m.depth !== null) tags.waterDepth = m.depth;
-    if (m.temperature !== null) tags.temperature = m.temperature;
-  }
-  return tags;
 }
 
 // ------------------------------------------------------------------ render
 
 function render() {
+  updateDiveOnlyOptions();
   const s = readSettings();
   state.rows = computeRows(s);
   renderDives();
@@ -258,7 +251,34 @@ function render() {
   $('#summary').textContent =
     !state.dives.length && !state.photos.length
       ? 'Add dive logs and photos to get started.'
-      : `${state.dives.length} dive(s), ${state.photos.length} photo(s) — ${ready} ready to geotag.`;
+      : `${state.dives.length} log(s), ${state.photos.length} photo(s) — ${ready} ready to geotag.`;
+}
+
+/**
+ * Depth and temperature only exist for dives. When only non-diving
+ * activities (GPS tracks) are loaded, switch those options off and explain;
+ * restore the user's choices once a dive is loaded again.
+ */
+function updateDiveOnlyOptions() {
+  const f = $('#settings').elements;
+  const tracks = state.dives.filter((d) => !d.activity.isDive);
+  const onlyTracks = tracks.length > 0 && tracks.length === state.dives.length;
+  for (const box of [f.depthAsAltitude, f.writeDiveTags]) {
+    if (onlyTracks && !box.disabled) {
+      box.dataset.wasChecked = String(box.checked);
+      box.checked = false;
+      box.disabled = true;
+    } else if (!onlyTracks && box.disabled) {
+      box.checked = box.dataset.wasChecked !== 'false';
+      box.disabled = false;
+    }
+  }
+  const note = $('#track-note');
+  const names = [...new Set(tracks.map((d) => d.activity.name || 'non-diving'))].join(', ');
+  note.hidden = tracks.length === 0;
+  note.textContent = onlyTracks
+    ? `Depth and temperature are off: the loaded log (${names}) isn't a dive. Positions come from its GPS track.`
+    : `Depth and temperature are written only for dives, not for the ${names} activity.`;
 }
 
 function renderDives() {
@@ -268,13 +288,18 @@ function renderDives() {
     .map((d) => {
       const pos = d.entry ? `${d.entry.lat.toFixed(5)}, ${d.entry.lon.toFixed(5)}` : 'no GPS fix';
       const photos = byDive.get(d)?.length || 0;
+      const fixes = d.samples.filter((x) => x.lat !== null).length;
+      const details = d.activity.isDive
+        ? `<span>max ${formatDepth(d.maxDepth, state.units)}</span>
+          <span>${formatTemperature(d.minTemperature, state.units, 0)}</span>`
+        : `<span>${esc(d.activity.name || 'Activity')} (not a dive)</span>
+          <span>GPS track, ${fixes} fixes</span>`;
       return `<article class="dive">
         <header>
           <strong>${esc(fmtDiveTime(d.startTime, d.utcOffsetMinutes))}</strong>
           <span class="muted">${esc(fmtZone(d.utcOffsetMinutes))}</span>
           <span>${Math.round((d.endTime - d.startTime) / 60000)} min</span>
-          <span>max ${formatDepth(d.maxDepth, state.units)}</span>
-          <span>${formatTemperature(d.minTemperature, state.units, 0)}</span>
+          ${details}
           <span>${esc(pos)}</span>
           <span class="muted">${photos} photo(s) · ${esc(d.fileName)}</span>
         </header>
@@ -326,7 +351,7 @@ async function* taggedFiles() {
   const s = readSettings();
   for (const r of state.rows.filter((x) => x.status === 'ready')) {
     try {
-      const data = writeExif(new Uint8Array(await r.photo.file.arrayBuffer()), tagsFor(r, s));
+      const data = writeExif(new Uint8Array(await r.photo.file.arrayBuffer()), buildTags(r.match, r.time, s));
       yield { name: r.photo.file.name, data, date: new Date(r.photo.file.lastModified) };
     } catch (err) {
       toast(`${r.photo.file.name}: ${err.message}`);

@@ -56,7 +56,9 @@ export function photoTime(exif, dives, s) {
 /**
  * @typedef {Object} MatchSettings
  * @property {number} toleranceMinutes   photos this long before/after a dive still match it (surface shots)
- * @property {'entry'|'exit'|'interpolate'|'manual'} locationMode
+ * @property {'auto'|'entry'|'exit'|'interpolate'|'track'|'manual'} locationMode
+ *   auto: 'entry' for dives, 'track' for other activities (GPS tracks)
+ *   track: interpolate between the GPS fixes just before and after the photo
  * @property {{lat:number, lon:number}|null} manualPosition  used for 'manual', and as fallback when a dive has no GPS
  */
 
@@ -68,6 +70,7 @@ export function photoTime(exif, dives, s) {
  * @property {number|null} temperature
  * @property {number|null} lat
  * @property {number|null} lon
+ * @property {number|null} gpsGapSeconds  for track positions: time between the two fixes used
  */
 
 /**
@@ -92,24 +95,69 @@ export function matchPhoto(time, dives, s) {
   if (!best) return null;
 
   const phase = time < best.startTime ? 'before' : time > best.endTime ? 'after' : 'underwater';
-  const depth = phase === 'underwater' ? interpolate(best.samples, time, 'depth') : 0;
-  const temperature = interpolate(best.samples, time, 'temperature');
+  // Depth and temperature only come from dives; other activities (e.g. a
+  // watch in a towed buoy) have no depth, and their temperature isn't water
+  // temperature at the photo's depth.
+  const isDive = best.activity?.isDive !== false;
+  const depth = !isDive ? null : phase === 'underwater' ? interpolate(best.samples, time, 'depth') : 0;
+  const temperature = isDive ? interpolate(best.samples, time, 'temperature') : null;
   const position = locate(best, time, phase, s);
-  return { dive: best, phase, depth, temperature, lat: position?.lat ?? null, lon: position?.lon ?? null };
+  return {
+    dive: best,
+    phase,
+    depth,
+    temperature,
+    lat: position?.lat ?? null,
+    lon: position?.lon ?? null,
+    gpsGapSeconds: position?.gapSeconds ?? null,
+  };
 }
 
 function locate(dive, time, phase, s) {
   if (s.locationMode === 'manual') return s.manualPosition;
+  const mode = s.locationMode === 'auto' || !s.locationMode ? (dive.activity?.isDive === false ? 'track' : 'entry') : s.locationMode;
   const { entry, exit } = dive;
   let p = null;
-  if (s.locationMode === 'exit') p = exit || entry;
-  else if (s.locationMode === 'interpolate' && entry && exit) {
+  if (mode === 'track') p = trackPosition(dive.samples, time);
+  if (p) return p;
+  if (mode === 'exit') p = exit || entry;
+  else if (mode === 'interpolate' && entry && exit) {
     const span = dive.endTime - dive.startTime;
     const f = phase === 'before' ? 0 : phase === 'after' || span <= 0 ? 1 : (time - dive.startTime) / span;
     p = { lat: entry.lat + (exit.lat - entry.lat) * f, lon: entry.lon + (exit.lon - entry.lon) * f };
   } else if (phase === 'after') p = exit || entry;
   else p = entry || exit;
   return p || s.manualPosition || null;
+}
+
+/**
+ * Position along a GPS track: linear interpolation between the fixes
+ * immediately before and after `time` (however far apart they are), or the
+ * nearest fix when `time` is outside the track.
+ * @returns {{lat:number, lon:number, gapSeconds:number|null}|null}
+ */
+export function trackPosition(samples, time) {
+  const fixes = samples.filter((x) => isNum(x.lat) && isNum(x.lon));
+  if (!fixes.length) return null;
+  const first = fixes[0];
+  const last = fixes[fixes.length - 1];
+  if (time <= first.time) return { lat: first.lat, lon: first.lon, gapSeconds: null };
+  if (time >= last.time) return { lat: last.lat, lon: last.lon, gapSeconds: null };
+  let lo = 0;
+  let hi = fixes.length - 1;
+  while (hi - lo > 1) {
+    const mid = (lo + hi) >> 1;
+    if (fixes[mid].time <= time) lo = mid;
+    else hi = mid;
+  }
+  const a = fixes[lo];
+  const b = fixes[hi];
+  const f = b.time === a.time ? 0 : (time - a.time) / (b.time - a.time);
+  return {
+    lat: a.lat + (b.lat - a.lat) * f,
+    lon: a.lon + (b.lon - a.lon) * f,
+    gapSeconds: (b.time - a.time) / 1000,
+  };
 }
 
 /**

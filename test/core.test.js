@@ -8,7 +8,9 @@ import { photoTime, matchPhoto, interpolate } from '../src/match.js';
 import { zipSync } from 'fflate';
 import { defaultUnits, formatDepth, formatTemperature } from '../src/ui/units.js';
 import { minuteTicks } from '../src/ui/profile.js';
-import { buildDiveFit, buildSuuntoFit, FitWriter, toFitTime } from './helpers/fit-writer.js';
+import { buildDiveFit, buildSuuntoFit, buildSwimFit, FitWriter, toFitTime } from './helpers/fit-writer.js';
+import { buildTags } from '../src/tags.js';
+import { makeDive } from '../src/model.js';
 import { Decoder, Stream } from '@garmin/fitsdk';
 import { buildJpeg, MAKER_NOTE_MAGIC } from './helpers/jpeg-builder.js';
 
@@ -74,6 +76,56 @@ test('FIT: Suunto export (no session positions, surface GPS in records, develope
   assert.equal(m.phase, 'underwater');
   near(m.depth, 21.7, 1e-3);
   near(m.lat, fit.entry.lat, 1e-6);
+});
+
+test('non-diving activity (towed-buoy swim): GPS track, no depth or temperature written', () => {
+  const swim = buildSwimFit();
+  const [track] = parseDiveLog('swim.fit', swim.bytes);
+  assert.equal(track.activity.isDive, false);
+  assert.equal(track.activity.sport, 'swimming');
+  assert.equal(track.activity.subSport, 'openWater');
+  assert.equal(track.activity.name, 'Open Water');
+  assert.equal(track.maxDepth, null);
+  assert.equal(track.utcOffsetMinutes, -240);
+
+  const s = { toleranceMinutes: 30, locationMode: 'auto', manualPosition: null };
+  const all = { writePosition: true, depthAsAltitude: true, writeDiveTags: true };
+
+  // On the track: interpolated between the fixes either side (5 s apart).
+  const t1 = swim.start + (10 * 60 + 2.5) * 1000;
+  const m1 = matchPhoto(t1, [track], s);
+  near(m1.lat, swim.at(602.5).lat, 1e-6);
+  near(m1.lon, swim.at(602.5).lon, 1e-6);
+  assert.equal(m1.gpsGapSeconds, 5);
+  assert.equal(m1.depth, null);
+  assert.equal(m1.temperature, null);
+
+  // Inside the GPS gap: interpolated between the last fix before and first fix after.
+  const m2 = matchPhoto(swim.start + 18 * 60_000, [track], s);
+  near(m2.lat, swim.at(18 * 60).lat, 1e-6); // the synthetic track is a straight line
+  assert.equal(m2.gpsGapSeconds, swim.gap[1] - swim.gap[0]);
+
+  // Even with every option on, only position (and GPS time) are written.
+  const tags = buildTags(m1, t1, all);
+  assert.deepEqual(Object.keys(tags).sort(), ['lat', 'lon', 'processingMethod', 'time']);
+  assert.match(tags.processingMethod, /GPS track \(Open Water\)/);
+
+  // Dives are unchanged: automatic = entry point, depth and temperature written.
+  const fit = buildDiveFit();
+  const [dive] = parseDiveLog('dive.fit', fit.bytes);
+  assert.equal(dive.activity.isDive, true);
+  const md = matchPhoto(fit.start + 20 * 60_000, [dive, track], s);
+  near(md.lat, fit.entry.lat, 1e-6);
+  assert.deepEqual(Object.keys(buildTags(md, fit.start, all)).sort(), ['altitude', 'lat', 'lon', 'processingMethod', 'temperature', 'time', 'waterDepth']);
+});
+
+test('track mode on a dive without track fixes falls back to the entry point; unknown activity uses depth data', () => {
+  const fit = buildDiveFit();
+  const [dive] = parseDiveLog('dive.fit', fit.bytes);
+  const m = matchPhoto(fit.start + 20 * 60_000, [dive], { toleranceMinutes: 0, locationMode: 'track', manualPosition: null });
+  near(m.lat, fit.entry.lat, 1e-6);
+  assert.equal(makeDive({ source: 't', samples: [{ time: 0, depth: 3 }, { time: 1000, depth: 0 }] }).activity.isDive, true);
+  assert.equal(makeDive({ source: 't', samples: [{ time: 0, depth: null, lat: 1, lon: 2 }, { time: 1000, depth: null }] }).activity.isDive, false);
 });
 
 test('FIT: rejects non-FIT data', () => {

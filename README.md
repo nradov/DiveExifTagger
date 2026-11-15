@@ -38,6 +38,25 @@ app, the exported FIT file still contains the coordinates the dive computer
 recorded (or none). Use the manual position option for those dives.
 
 Suunto support was tested against Suunto Ocean exports (scuba and freediving).
+
+### Other activities: GPS tracks (e.g. a watch in a towed surface buoy)
+
+For underwater survey work you can put a GPS watch (for example a Garmin
+Forerunner 935) in a towed surface buoy and record any non-diving activity,
+such as an open water swim. Export it the same way and drop it in like a dive log.
+
+DiveExifTagger reads the activity type from the FIT file. Scuba and freediving
+activities are handled as dives. Any other activity is handled as a **GPS track**:
+
+- **Position:** each photo's position is interpolated between the GPS fixes
+  recorded immediately before and after the photo was taken. Gaps in the GPS
+  track are bridged in a straight line, and the review table flags photos
+  taken in a gap longer than two minutes.
+- **No depth or temperature:** the watch has no depth data, and its temperature
+  isn't the water temperature where the photo was taken, so neither is written.
+  When only GPS tracks are loaded, those options are switched off.
+- **The chart** shows where the track has GPS coverage and where the photos fall,
+  instead of a depth profile.
 Other dive log formats can be added; see [Adding dive log formats](#adding-dive-log-formats).
 
 ## What gets written
@@ -49,10 +68,10 @@ Tags follow the Exif standard, published by CIPA as
 
 | Data | EXIF tag(s) | Notes |
 | --- | --- | --- |
-| Position | `GPSLatitude`, `GPSLongitude` (+ refs), `GPSMapDatum` | Dive computers can't get a GPS fix underwater, so the position comes from the dive's entry point, exit point, a time-based interpolation between them, or a manual position. |
-| Depth | `GPSAltitude` with `GPSAltitudeRef = 1` (below sea level) | Optional. Most photo managers (Lightroom, Apple Photos, digiKam…) display this. |
-| Depth | `WaterDepth` (Exif 2.31, `0x9403`) | Optional. The standard tag for water depth, in metres. |
-| Temperature | `Temperature` (Exif 2.31, `0x9400`) | Optional. Water temperature in °C at the photo's time. |
+| Position | `GPSLatitude`, `GPSLongitude` (+ refs), `GPSMapDatum` | Dive computers can't get a GPS fix underwater. **Automatic** (the default) uses the entry point for dives and interpolates along the GPS track for other activities. You can also choose the exit point, a time-based interpolation between entry and exit, interpolation along the GPS track, or a manual position. |
+| Depth | `GPSAltitude` with `GPSAltitudeRef = 1` (below sea level) | Optional, dives only. Most photo managers (Lightroom, Apple Photos, digiKam…) display this. |
+| Depth | `WaterDepth` (Exif 2.31, `0x9403`) | Optional, dives only. The standard tag for water depth, in metres. |
+| Temperature | `Temperature` (Exif 2.31, `0x9400`) | Optional, dives only. Water temperature in °C at the photo's time. |
 | Time | `GPSDateStamp`, `GPSTimeStamp` | The photo's corrected UTC time. |
 
 EXIF values are always metric (metres, °C), as the standard requires. The web page
@@ -122,7 +141,8 @@ index.html               UI markup
 css/style.css            styles (light & dark)
 src/app.js               UI controller
 src/model.js             format-neutral Dive / Sample model
-src/match.js             photo ↔ dive matching and interpolation
+src/match.js             photo ↔ dive matching and interpolation (incl. GPS tracks)
+src/tags.js              which EXIF values to write for a photo
 src/formats/index.js     dive log parser registry
 src/formats/fit.js       FIT (Garmin, Suunto) → Dive adapter (uses @garmin/fitsdk)
 src/exif/jpeg-exif.js    JPEG EXIF reader/writer

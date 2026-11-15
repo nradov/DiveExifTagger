@@ -32,6 +32,15 @@
  * @property {Sample[]} samples       sorted by time
  * @property {number|null} maxDepth
  * @property {number|null} minTemperature
+ * @property {Activity} activity     what kind of recording this is
+ *
+ * @typedef {Object} Activity
+ * @property {boolean} isDive         a scuba or freediving activity with depth data.
+ *   Other activities (e.g. a watch in a towed surface buoy recording an open
+ *   water swim) are GPS tracks: no depth or temperature is written for them.
+ * @property {string|null} sport      as recorded, e.g. "diving", "swimming"
+ * @property {string|null} subSport   e.g. "apneaDiving", "openWater"
+ * @property {string|null} name       human readable, e.g. "Open Water" or "Multi-Gas"
  */
 
 let counter = 0;
@@ -57,6 +66,13 @@ export function makeDive(props) {
     samples,
     maxDepth: depths.length ? Math.max(...depths) : null,
     minTemperature: temps.length ? Math.min(...temps) : null,
+    activity: {
+      sport: props.activity?.sport ?? null,
+      subSport: props.activity?.subSport ?? null,
+      name: props.activity?.name ?? null,
+      // Unknown activity type: decide by whether there is depth data.
+      isDive: props.activity?.isDive ?? depths.some((d) => d > 0),
+    },
   };
 }
 

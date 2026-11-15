@@ -44,7 +44,7 @@
         </div>
         <label class="dropzone" id="log-drop">
           <input type="file" id="log-input" multiple hidden />
-          <span class="dz-title">Drop dive log files here, or click to choose</span>
+          <span class="dz-title">Drop dive logs (or other activities with GPS) here, or click to choose</span>
           <span class="dz-hint" id="log-formats"></span>
         </label>
         <div id="dive-list" class="dive-list"></div>
@@ -101,12 +101,15 @@
             <label>
               Position to use
               <select name="locationMode">
+                <option value="auto" selected>Automatic</option>
                 <option value="entry">Dive entry point</option>
                 <option value="interpolate">Interpolate entry → exit by time</option>
                 <option value="exit">Dive exit point</option>
+                <option value="track">Interpolate along the GPS track</option>
                 <option value="manual">Manual position for all photos</option>
               </select>
             </label>
+            <small id="location-hint">Dives: the entry point. Other activities (e.g. a watch in a towed buoy): interpolated along the GPS track.</small>
             <div class="row">
               <label>
                 Latitude
@@ -136,6 +139,7 @@
               <input name="writeDiveTags" type="checkbox" checked />
               Exif 2.31 WaterDepth and Temperature tags
             </label>
+            <small id="track-note" hidden></small>
             <label class="check">
               <input name="skipExistingGps" type="checkbox" />
               Leave photos that already have GPS data unchanged

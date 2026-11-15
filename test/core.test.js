@@ -107,8 +107,8 @@ test('non-diving activity (towed-buoy swim): GPS track, no depth or temperature 
 
   // Even with every option on, only position (and GPS time) are written.
   const tags = buildTags(m1, t1, all);
-  assert.deepEqual(Object.keys(tags).sort(), ['lat', 'lon', 'processingMethod', 'time']);
-  assert.match(tags.processingMethod, /GPS track \(Open Water\)/);
+  assert.deepEqual(Object.keys(tags).sort(), ['gpsStatus', 'lat', 'lon', 'processingMethod', 'time']);
+  assert.deepEqual([tags.processingMethod, tags.gpsStatus], ['GPS', 'A']);
 
   // Dives are unchanged: automatic = entry point, depth and temperature written.
   const fit = buildDiveFit();
@@ -116,7 +116,9 @@ test('non-diving activity (towed-buoy swim): GPS track, no depth or temperature 
   assert.equal(dive.activity.isDive, true);
   const md = matchPhoto(fit.start + 20 * 60_000, [dive, track], s);
   near(md.lat, fit.entry.lat, 1e-6);
-  assert.deepEqual(Object.keys(buildTags(md, fit.start, all)).sort(), ['altitude', 'lat', 'lon', 'processingMethod', 'temperature', 'time', 'waterDepth']);
+  const diveTags = buildTags(md, fit.start, all);
+  assert.deepEqual(Object.keys(diveTags).sort(), ['altitude', 'gpsStatus', 'lat', 'lon', 'processingMethod', 'temperature', 'time', 'waterDepth']);
+  assert.deepEqual([diveTags.processingMethod, diveTags.gpsStatus], ['GPS', 'V']);
 });
 
 test('track mode on a dive without track fixes falls back to the entry point; unknown activity uses depth data', () => {

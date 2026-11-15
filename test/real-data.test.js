@@ -11,6 +11,9 @@ import { readFileSync } from 'node:fs';
 import { parseDiveLogFile } from '../src/formats/index.js';
 import { readExif, writeExif } from '../src/exif/jpeg-exif.js';
 import { photoTime, matchPhoto } from '../src/match.js';
+import { buildTags } from '../src/tags.js';
+import { parseDiveLog } from '../src/formats/index.js';
+import { buildSwimFit } from './helpers/fit-writer.js';
 
 const fixture = (name) => new Uint8Array(readFileSync(new URL(`./fixtures/${name}`, import.meta.url)));
 const near = (a, b, eps) => assert.ok(Math.abs(a - b) <= eps, `${a} ≉ ${b}`);
@@ -85,6 +88,74 @@ for (const [name, [utc, depth]] of Object.entries(PHOTOS)) {
     assert.deepEqual(afterApp1(out), afterApp1(jpeg));
   });
 }
+
+// ---------------------------------------------------------------- two passes
+
+/**
+ * Survey workflow: the dive computer logs depth/temperature underwater while a
+ * second watch in a towed buoy records a GPS track. The same photos go through
+ * the page twice, once per log, in either order.
+ */
+const buoy = parseDiveLog(
+  'buoy.fit',
+  buildSwimFit({
+    start: Date.UTC(2026, 9, 31, 18, 25),
+    minutes: 85,
+    from: { lat: 36.42919, lon: -121.93241 },
+    to: { lat: 36.43764, lon: -121.9351 },
+    gap: [20 * 60, 30 * 60],
+    utcOffsetMinutes: -420,
+  }).bytes,
+)[0];
+const PAGE = { cameraUtcOffsetMinutes: null, clockCorrectionSeconds: 0, toleranceMinutes: 30, locationMode: 'auto', manualPosition: null, writePosition: true, depthAsAltitude: true, writeDiveTags: true };
+
+function runPass(jpeg, logs, settings = PAGE) {
+  const exif = readExif(jpeg);
+  const pt = photoTime(exif, logs, settings);
+  const m = matchPhoto(pt.time, logs, settings);
+  return { out: writeExif(jpeg, buildTags(m, pt.time, settings, exif)), m };
+}
+
+test('two passes (dive log + surface GPS track) give the same result in either order', () => {
+  for (const name of Object.keys(PHOTOS)) {
+    const jpeg = fixture(name);
+    const diveFirst = runPass(runPass(jpeg, dives).out, [buoy]);
+    const trackPass = runPass(jpeg, [buoy]);
+    const trackFirst = runPass(trackPass.out, dives);
+
+    for (const out of [diveFirst.out, trackFirst.out]) {
+      const e = readExif(out);
+      // position from the track, measured at the photo's time
+      near(e.gps.lat, trackPass.m.lat, 1e-7);
+      near(e.gps.lon, trackPass.m.lon, 1e-7);
+      assert.equal(e.gpsStatus, 'A');
+      assert.equal(e.gpsProcessingMethod, 'GPS');
+      // depth and temperature from the dive computer
+      near(e.waterDepth, PHOTOS[name][1], 0.01);
+      near(e.gps.altitude, -PHOTOS[name][1], 0.01);
+      assert.equal(e.temperature, 20);
+      // camera metadata untouched
+      assert.deepEqual(tagBytes(out, 0x0011), tagBytes(jpeg, 0x0011));
+      assert.deepEqual(tagBytes(out, 0x927c), tagBytes(jpeg, 0x927c));
+      assert.deepEqual(afterApp1(out), afterApp1(jpeg));
+    }
+    assert.deepEqual(readExif(diveFirst.out), readExif(trackFirst.out));
+  }
+});
+
+test('re-running a dive pass replaces its own earlier position; manual still overrides a track position', () => {
+  const jpeg = fixture('PA310461.JPG');
+  const entry = readExif(runPass(jpeg, dives).out);
+  assert.equal(entry.gpsStatus, 'V');
+  near(entry.gps.lat, dives[0].entry.lat, 1e-7);
+
+  const again = readExif(runPass(runPass(jpeg, dives).out, dives, { ...PAGE, locationMode: 'exit' }).out);
+  near(again.gps.lat, dives[0].exit.lat, 1e-7);
+
+  const manual = { ...PAGE, locationMode: 'manual', manualPosition: { lat: 36.5, lon: -121.9 } };
+  const overridden = readExif(runPass(runPass(jpeg, [buoy]).out, dives, manual).out);
+  assert.deepEqual([overridden.gps.lat, overridden.gps.lon, overridden.gpsProcessingMethod, overridden.gpsStatus], [36.5, -121.9, 'MANUAL', 'V']);
+});
 
 /** Raw value bytes of the first IFD entry with this tag (little-endian TIFF, as the TG-7 writes). */
 function tagBytes(jpeg, tag) {

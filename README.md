@@ -57,6 +57,24 @@ activities are handled as dives. Any other activity is handled as a **GPS track*
   When only GPS tracks are loaded, those options are switched off.
 - **The chart** shows where the track has GPS coverage and where the photos fall,
   instead of a depth profile.
+
+### Combining a dive computer log with a surface GPS track
+
+On survey dives you'll typically have two FIT files: one from the dive
+computer (depth, temperature) and one from the watch in the towed buoy
+(position). Run your photos through the page twice, once with each file, in
+either order. Load the photos downloaded from the first pass into the second.
+
+- The **GPS track pass** writes the position measured at the photo's time.
+- The **dive log pass** writes depth and temperature. It does not replace a
+  position measured at the photo's time (marked `GPSStatus = A`, below), so the
+  track's position survives even if the dive log is applied second. Choosing
+  *Manual position* still overrides it.
+- Each pass only replaces the tags it owns, so the result is identical in
+  either order. All other metadata, including maker notes, thumbnails and
+  the camera's own GPS tags such as compass heading, is kept, and the image
+  data is never re-encoded. This is checked by automated tests and was
+  verified with ExifTool (`-validate`).
 Other dive log formats can be added; see [Adding dive log formats](#adding-dive-log-formats).
 
 ## What gets written
@@ -73,6 +91,7 @@ Tags follow the Exif standard, published by CIPA as
 | Depth | `WaterDepth` (Exif 2.31, `0x9403`) | Optional, dives only. The standard tag for water depth, in metres. |
 | Temperature | `Temperature` (Exif 2.31, `0x9400`) | Optional, dives only. Water temperature in °C at the photo's time. |
 | Time | `GPSDateStamp`, `GPSTimeStamp` | The photo's corrected UTC time. |
+| Position source | `GPSProcessingMethod`, `GPSStatus` | Standard values only: `GPS` (or `MANUAL`), and `GPSStatus` `A` when the position was measured at the photo's time (GPS track) or `V` when it wasn't (a dive's entry/exit point, or a manual position). |
 
 EXIF values are always metric (metres, °C), as the standard requires. The web page
 can *display* depths and temperatures in metric or statute units (feet, °F); the

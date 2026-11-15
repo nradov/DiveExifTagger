@@ -5,7 +5,7 @@
 import { PARSERS, ACCEPTED_EXTENSIONS, parseDiveLogFile } from './formats/index.js';
 import { readExif, writeExif, parseExifDate } from './exif/jpeg-exif.js';
 import { photoTime, matchPhoto } from './match.js';
-import { buildTags, hasPayload } from './tags.js';
+import { buildTags, hasPayload, hasMeasuredPosition } from './tags.js';
 import { zipSync } from 'fflate';
 import { profileSvg } from './ui/profile.js';
 import { defaultUnits, formatDepth, formatTemperature } from './ui/units.js';
@@ -225,10 +225,12 @@ function computeRows(s) {
     row.match = matchPhoto(row.time, state.dives, s);
     if (!row.match) return { ...row, status: 'skip', note: 'No dive at this time' };
     if (s.skipExistingGps && photo.exif.gps) return { ...row, status: 'skip', note: 'Already has GPS' };
-    if (!hasPayload(buildTags(row.match, row.time, s))) return { ...row, status: 'skip', note: 'Nothing to write' };
+    if (!hasPayload(buildTags(row.match, row.time, s, photo.exif))) return { ...row, status: 'skip', note: 'Nothing to write' };
     const m = row.match;
     const isDive = m.dive.activity.isDive;
-    if (m.lat === null && s.writePosition) row.note = 'No GPS position in log (use a manual position)';
+    if (isDive && s.writePosition && s.locationMode !== 'manual' && hasMeasuredPosition(photo.exif))
+      row.note = 'Keeping the GPS position measured when the photo was taken (e.g. from a surface GPS track)';
+    else if (m.lat === null && s.writePosition) row.note = 'No GPS position in log (use a manual position)';
     else if (!isDive && m.gpsGapSeconds > 120)
       row.note = `Position interpolated across a ${Math.round(m.gpsGapSeconds / 60)}-minute GPS gap`;
     else if (m.phase !== 'underwater') row.note = isDive ? `Surface, ${m.phase} dive` : `${m.phase === 'before' ? 'Before' : 'After'} the activity`;
@@ -351,7 +353,7 @@ async function* taggedFiles() {
   const s = readSettings();
   for (const r of state.rows.filter((x) => x.status === 'ready')) {
     try {
-      const data = writeExif(new Uint8Array(await r.photo.file.arrayBuffer()), buildTags(r.match, r.time, s));
+      const data = writeExif(new Uint8Array(await r.photo.file.arrayBuffer()), buildTags(r.match, r.time, s, r.photo.exif));
       yield { name: r.photo.file.name, data, date: new Date(r.photo.file.lastModified) };
     } catch (err) {
       toast(`${r.photo.file.name}: ${err.message}`);

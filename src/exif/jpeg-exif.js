@@ -33,6 +33,7 @@ const TAG = {
   GPS_ALT_REF: 0x0005,
   GPS_ALT: 0x0006,
   GPS_TIMESTAMP: 0x0007,
+  GPS_STATUS: 0x0009,
   GPS_MAP_DATUM: 0x0012,
   GPS_PROCESSING_METHOD: 0x001b,
   GPS_DATESTAMP: 0x001d,
@@ -153,7 +154,7 @@ function arr(n, f) {
  *   dateTimeOriginal: string|null, offsetTimeOriginal: string|null, subSecTimeOriginal: string|null,
  *   make: string|null, model: string|null,
  *   gps: {lat:number, lon:number, altitude:number|null}|null,
- *   waterDepth: number|null, temperature: number|null
+ *   gpsStatus: string|null, gpsProcessingMethod: string|null, waterDepth: number|null, temperature: number|null
  * }}
  */
 export function readExif(input) {
@@ -165,6 +166,8 @@ export function readExif(input) {
     make: null,
     model: null,
     gps: null,
+    gpsStatus: null,
+    gpsProcessingMethod: null,
     waterDepth: null,
     temperature: null,
   };
@@ -196,6 +199,12 @@ export function readExif(input) {
   const gpsPtr = get(i0, TAG.GPS_IFD);
   if (gpsPtr) {
     const ig = readIfd(tiff, view, gpsPtr, little);
+    out.gpsStatus = get(ig, TAG.GPS_STATUS) || null;
+    const method = get(ig, TAG.GPS_PROCESSING_METHOD);
+    if (Array.isArray(method) && method.length > 8) {
+      // 8-byte character code ("ASCII\0\0\0", ...) followed by the text
+      out.gpsProcessingMethod = new TextDecoder().decode(Uint8Array.from(method.slice(8))).replace(/\0+$/, '') || null;
+    }
     const lat = get(ig, TAG.GPS_LAT);
     const lon = get(ig, TAG.GPS_LON);
     if (Array.isArray(lat) && Array.isArray(lon)) {
@@ -226,7 +235,8 @@ export function readExif(input) {
  * @param {number} [tags.time]           UTC ms, written as GPSDateStamp/GPSTimeStamp
  * @param {number} [tags.waterDepth]     metres, Exif 2.31 WaterDepth
  * @param {number} [tags.temperature]    °C, Exif 2.31 Temperature
- * @param {string} [tags.processingMethod] free text, e.g. "Garmin Descent dive log"
+ * @param {'A'|'V'} [tags.gpsStatus] GPSStatus: A = measurement in progress, V = interrupted
+ * @param {string} [tags.processingMethod] GPSProcessingMethod: "GPS", "CELLID", "WLAN" or "MANUAL"
  * @returns {Uint8Array}
  */
 export function writeExif(input, tags) {
@@ -268,6 +278,7 @@ export function writeExif(input, tags) {
       );
       g.push(newEntry(TAG.GPS_DATESTAMP, TYPE.ASCII, `${d.getUTCFullYear()}:${pad(d.getUTCMonth() + 1)}:${pad(d.getUTCDate())}`));
     }
+    if (tags.gpsStatus === 'A' || tags.gpsStatus === 'V') g.push(newEntry(TAG.GPS_STATUS, TYPE.ASCII, tags.gpsStatus));
     g.push(newEntry(TAG.GPS_MAP_DATUM, TYPE.ASCII, 'WGS-84'));
     if (tags.processingMethod) {
       const text = new TextEncoder().encode(tags.processingMethod);
